@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="shopify_fetch_catalog_wizard_view_form" model="ir.ui.view">
+        <field name="name">shopify.fetch.catalog.wizard.form</field>
+        <field name="model">shopify.fetch.catalog.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Fetch from Shopify">
+                <group>
+                    <field name="title" invisible="1"/>
+                    <field name="store_id" options="{'no_create': True}"/>
+                </group>
+                <div class="text-muted">
+                    Load Shopify variants into the mapping list so you can link
+                    each one to the matching Odoo product.
+                </div>
+                <footer>
+                    <button name="action_fetch_and_open" type="object"
+                            string="Fetch" class="btn-primary"/>
+                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_shopify_fetch_catalog_wizard" model="ir.actions.act_window">
+        <field name="name">Fetch from Shopify</field>
+        <field name="res_model">shopify.fetch.catalog.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_partner_view_form_shopify" model="ir.ui.view">
+        <field name="name">res.partner.form.shopify</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_shopify_mappings" type="object"
+                        class="oe_stat_button" icon="fa-shopping-basket"
+                        groups="shopify_connector.group_shopify_user"
+                        invisible="shopify_mapping_count == 0">
+                    <field name="shopify_mapping_count" widget="statinfo" string="Shopify"/>
+                </button>
+            </div>
+            <notebook position="inside">
+                <page string="Shopify" name="shopify_connector"
+                      groups="shopify_connector.group_shopify_user">
+                    <group>
+                        <group string="Shopify Identity">
+                            <field name="is_shopify_customer" readonly="1"/>
+                            <field name="shopify_customer_id" readonly="1"
+                                   placeholder="Set automatically when a Shopify order is imported"/>
+                        </group>
+                    </group>
+                    <group string="Store Mappings" invisible="not shopify_mapping_ids">
+                        <field name="shopify_mapping_ids" nolabel="1" readonly="1">
+                            <list>
+                                <field name="store_id"/>
+                                <field name="shopify_customer_id"/>
+                                <field name="email"/>
+                                <field name="phone"/>
+                                <field name="order_count"/>
+                                <field name="last_synced_at"/>
+                            </list>
+                        </field>
+                    </group>
+                    <div class="text-muted" invisible="shopify_customer_id or shopify_mapping_ids">
+                        This contact is not linked to Shopify yet. The Shopify Customer ID
+                        is filled automatically when an order is imported from Shopify.
+                    </div>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <record id="res_partner_view_search_shopify" model="ir.ui.view">
+        <field name="name">res.partner.search.shopify</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="shopify_customer_id" string="Shopify Customer ID"
+                       groups="shopify_connector.group_shopify_user"/>
+            </field>
+            <filter name="type_person" position="after">
+                <separator/>
+                <filter name="shopify_customers" string="From Shopify"
+                        domain="[('is_shopify_customer', '=', True)]"
+                        groups="shopify_connector.group_shopify_user"/>
+            </filter>
+        </field>
+    </record>
+
+</odoo>

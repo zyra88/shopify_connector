@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="shopify_sync_queue_view_list" model="ir.ui.view">
+        <field name="name">shopify.sync.queue.list</field>
+        <field name="model">shopify.sync.queue</field>
+        <field name="arch" type="xml">
+            <list string="Sync Queue" create="false"
+                  decoration-danger="state == 'failed'"
+                  decoration-success="state == 'done'"
+                  decoration-muted="state == 'cancelled'">
+                <header>
+                    <button name="action_process_pending" type="object"
+                            string="Run Pending Jobs" class="btn-primary" icon="fa-play"/>
+                </header>
+                <field name="create_date" string="Queued"/>
+                <field name="processed_at" string="Processed" optional="show"/>
+                <field name="store_id" optional="show"/>
+                <field name="shopify_order_name"/>
+                <field name="shopify_order_id" optional="hide"/>
+                <field name="job_type" optional="hide"/>
+                <field name="attempts"/>
+                <field name="next_attempt_at" optional="hide"/>
+                <field name="shopify_order_state" string="Import Result" optional="show"
+                       widget="badge"
+                       decoration-success="shopify_order_state == 'imported'"
+                       decoration-warning="shopify_order_state == 'needs_review'"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="review_reason" string="Why Review?" optional="show"/>
+                <field name="error_message" string="Queue Error" optional="show"/>
+                <field name="state" string="Queue Job" widget="badge"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'failed'"
+                       decoration-info="state == 'pending'"/>
+                <field name="company_id" column_invisible="True"/>
+                <button name="action_process" type="object" string="Run" icon="fa-play"
+                        invisible="state in ('done', 'cancelled')"/>
+                <button name="action_open_shopify_order" type="object" string="Open Order"
+                        icon="fa-external-link" invisible="not shopify_order_ref_id"/>
+                <button name="action_retry" type="object" string="Reset" icon="fa-refresh"
+                        invisible="state != 'failed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shopify_sync_queue_view_form" model="ir.ui.view">
+        <field name="name">shopify.sync.queue.form</field>
+        <field name="model">shopify.sync.queue</field>
+        <field name="arch" type="xml">
+            <form string="Queue Job" create="false">
+                <header>
+                    <button name="action_process" type="object" string="Run Now"
+                            class="btn-primary" invisible="state in ('done', 'cancelled')"/>
+                    <button name="action_retry" type="object" string="Reset to Pending"
+                            invisible="state not in ('failed', 'cancelled')"/>
+                    <button name="action_cancel" type="object" string="Cancel"
+                            invisible="state in ('done', 'cancelled')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,processing,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="shopify_order_name" readonly="1" placeholder="Shopify order"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="store_id" readonly="1"/>
+                            <field name="job_type" readonly="1"/>
+                            <field name="shopify_order_id" readonly="1"/>
+                            <field name="priority"/>
+                        </group>
+                        <group>
+                            <field name="attempts" readonly="1"/>
+                            <field name="max_attempts"/>
+                            <field name="next_attempt_at"/>
+                            <field name="processed_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Result">
+                        <field name="shopify_order_ref_id" readonly="1"/>
+                        <field name="shopify_order_state" readonly="1"/>
+                        <field name="sale_order_id" readonly="1"/>
+                    </group>
+                    <group string="Error" invisible="not error_message">
+                        <field name="error_message" nolabel="1" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Shopify Payload" name="payload">
+                            <field name="payload" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                        </page>
+                        <page string="Logs" name="logs">
+                            <field name="log_ids" readonly="1">
+                                <list>
+                                    <field name="create_date" string="When"/>
+                                    <field name="level"/>
+                                    <field name="operation"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Technical Details" name="technical" groups="base.group_no_one"
+                              invisible="not exception_info">
+                            <field name="exception_info" widget="ace" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_sync_queue_payload_form" model="ir.ui.view">
+        <field name="name">shopify.sync.queue.payload.form</field>
+        <field name="model">shopify.sync.queue</field>
+        <field name="arch" type="xml">
+            <form string="Shopify Payload" create="false" edit="false">
+                <field name="payload" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                <footer>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_sync_queue_view_search" model="ir.ui.view">
+        <field name="name">shopify.sync.queue.search</field>
+        <field name="model">shopify.sync.queue</field>
+        <field name="arch" type="xml">
+            <search string="Sync Queue">
+                <field name="shopify_order_name"/>
+                <field name="shopify_order_id"/>
+                <field name="store_id"/>
+                <filter name="pending" string="Pending" domain="[('state', '=', 'pending')]"/>
+                <filter name="failed" string="Failed" domain="[('state', '=', 'failed')]"/>
+                <filter name="done" string="Done" domain="[('state', '=', 'done')]"/>
+                <separator/>
+                <filter name="due" string="Due Now"
+                        domain="['&amp;', ('state', '=', 'pending'), '|', ('next_attempt_at', '=', False), ('next_attempt_at', '&lt;=', datetime.datetime.now())]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_shopify_sync_queue" model="ir.actions.act_window">
+        <field name="name">Sync Queue</field>
+        <field name="res_model">shopify.sync.queue</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="shopify_sync_queue_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">The queue is empty</p>
+            <p>Fetched Shopify orders wait here before they become sale orders.</p>
+            <p><strong>Queue Job = Done</strong> means the import ran successfully.
+               <strong>Import Result = Needs Review</strong> means the order was saved
+               but a product is not mapped yet — open the order to see why.</p>
+        </field>
+    </record>
+
+</odoo>

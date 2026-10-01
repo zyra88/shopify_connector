@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="shopify_customer_mapping_view_list" model="ir.ui.view">
+        <field name="name">shopify.customer.mapping.list</field>
+        <field name="model">shopify.customer.mapping</field>
+        <field name="arch" type="xml">
+            <list string="Shopify Customers">
+                <field name="store_id" optional="show"/>
+                <field name="shopify_customer_id"/>
+                <field name="partner_id"/>
+                <field name="email"/>
+                <field name="phone" optional="show"/>
+                <field name="shopify_tags" optional="hide"/>
+                <field name="order_count" string="Orders"/>
+                <field name="last_synced_at"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shopify_customer_mapping_view_form" model="ir.ui.view">
+        <field name="name">shopify.customer.mapping.form</field>
+        <field name="model">shopify.customer.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Shopify Customer">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_partner" type="object" class="oe_stat_button"
+                                icon="fa-user" string="Customer"/>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="store_id"/>
+                            <field name="shopify_customer_id"/>
+                            <field name="partner_id"/>
+                        </group>
+                        <group>
+                            <field name="email"/>
+                            <field name="phone"/>
+                            <field name="shopify_tags"/>
+                            <field name="last_synced_at"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_customer_mapping_view_search" model="ir.ui.view">
+        <field name="name">shopify.customer.mapping.search</field>
+        <field name="model">shopify.customer.mapping</field>
+        <field name="arch" type="xml">
+            <search string="Shopify Customers">
+                <field name="partner_id"/>
+                <field name="shopify_customer_id"/>
+                <field name="email"/>
+                <field name="phone"/>
+                <field name="store_id"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_shopify_customer_mapping" model="ir.actions.act_window">
+        <field name="name">Customer Mappings</field>
+        <field name="res_model">shopify.customer.mapping</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="shopify_customer_mapping_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No Shopify customers yet</p>
+            <p>These links are created automatically while orders are imported.
+               Guest checkouts produce no mapping: they are re-found by email
+               or phone on the next import.</p>
+        </field>
+    </record>
+
+</odoo>

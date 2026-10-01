@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_shopify_root"
+              name="Shopify"
+              web_icon="shopify_connector,static/description/icon.png"
+              sequence="55"
+              groups="shopify_connector.group_shopify_user"/>
+
+    <!-- Operations -->
+    <menuitem id="menu_shopify_orders_root"
+              name="Orders"
+              parent="menu_shopify_root"
+              sequence="10"/>
+
+    <menuitem id="menu_shopify_order"
+              name="Shopify Orders"
+              parent="menu_shopify_orders_root"
+              action="action_shopify_order"
+              sequence="10"/>
+
+    <menuitem id="menu_shopify_order_needs_review"
+              name="Needs Review"
+              parent="menu_shopify_orders_root"
+              action="action_shopify_order_needs_review"
+              sequence="20"/>
+
+    <menuitem id="menu_shopify_import_wizard"
+              name="Import Orders"
+              parent="menu_shopify_orders_root"
+              action="action_shopify_import_orders_wizard"
+              sequence="30"/>
+
+    <!-- Product linking (mirrors Odoo template + variant structure) -->
+    <menuitem id="menu_shopify_mapping_root"
+              name="Products"
+              parent="menu_shopify_root"
+              sequence="20"/>
+
+    <menuitem id="menu_shopify_product_mapping"
+              name="Link Templates"
+              parent="menu_shopify_mapping_root"
+              action="action_shopify_product_mapping"
+              sequence="10"/>
+
+    <menuitem id="menu_shopify_product_catalog"
+              name="Link Variants"
+              parent="menu_shopify_mapping_root"
+              action="action_shopify_product_catalog"
+              sequence="20"/>
+
+    <menuitem id="menu_shopify_customer_mapping"
+              name="Customers"
+              parent="menu_shopify_mapping_root"
+              action="action_shopify_customer_mapping"
+              sequence="30"/>
+
+    <!-- Monitoring -->
+    <menuitem id="menu_shopify_monitoring_root"
+              name="Monitoring"
+              parent="menu_shopify_root"
+              sequence="30"/>
+
+    <menuitem id="menu_shopify_sync_queue"
+              name="Sync Queue"
+              parent="menu_shopify_monitoring_root"
+              action="action_shopify_sync_queue"
+              sequence="10"/>
+
+    <menuitem id="menu_shopify_sync_log"
+              name="Sync Logs"
+              parent="menu_shopify_monitoring_root"
+              action="action_shopify_sync_log"
+              sequence="20"/>
+
+    <!-- Configuration -->
+    <menuitem id="menu_shopify_configuration_root"
+              name="Configuration"
+              parent="menu_shopify_root"
+              sequence="90"
+              groups="shopify_connector.group_shopify_manager"/>
+
+    <menuitem id="menu_shopify_store"
+              name="Stores"
+              parent="menu_shopify_configuration_root"
+              action="action_shopify_store"
+              sequence="10"/>
+
+</odoo>

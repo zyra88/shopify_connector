@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="shopify_sync_log_view_list" model="ir.ui.view">
+        <field name="name">shopify.sync.log.list</field>
+        <field name="model">shopify.sync.log</field>
+        <field name="arch" type="xml">
+            <list string="Sync Logs" create="false"
+                  decoration-danger="level == 'error'"
+                  decoration-warning="level == 'warning'"
+                  decoration-muted="level == 'info'">
+                <field name="create_date" string="When"/>
+                <field name="store_id" optional="show"/>
+                <field name="level"/>
+                <field name="operation"/>
+                <field name="shopify_reference" string="Shopify Ref"/>
+                <field name="message"/>
+                <field name="sale_order_id" optional="hide"/>
+                <field name="partner_id" optional="hide"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shopify_sync_log_view_form" model="ir.ui.view">
+        <field name="name">shopify.sync.log.form</field>
+        <field name="model">shopify.sync.log</field>
+        <field name="arch" type="xml">
+            <form string="Sync Log" create="false" edit="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="store_id"/>
+                            <field name="level"/>
+                            <field name="operation"/>
+                            <field name="create_date" string="When"/>
+                        </group>
+                        <group>
+                            <field name="shopify_reference"/>
+                            <field name="shopify_order_id"/>
+                            <field name="shopify_order_ref_id"/>
+                            <field name="sale_order_id"/>
+                            <field name="partner_id"/>
+                            <field name="queue_id"/>
+                        </group>
+                    </group>
+                    <group string="Message">
+                        <field name="message" nolabel="1"/>
+                    </group>
+                    <group string="Technical Details" invisible="not exception_info"
+                           groups="base.group_no_one">
+                        <field name="exception_info" nolabel="1" widget="ace"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_sync_log_view_search" model="ir.ui.view">
+        <field name="name">shopify.sync.log.search</field>
+        <field name="model">shopify.sync.log</field>
+        <field name="arch" type="xml">
+            <search string="Sync Logs">
+                <field name="message"/>
+                <field name="shopify_reference"/>
+                <field name="store_id"/>
+                <filter name="errors" string="Errors" domain="[('level', '=', 'error')]"/>
+                <filter name="warnings" string="Warnings" domain="[('level', '=', 'warning')]"/>
+                <separator/>
+                <filter name="today" string="Today"
+                        domain="[('create_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
+                <filter name="last_week" string="Last 7 Days"
+                        domain="[('create_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
+                    <filter name="group_level" string="Level" context="{'group_by': 'level'}"/>
+                    <filter name="group_operation" string="Operation" context="{'group_by': 'operation'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'create_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_shopify_sync_log" model="ir.actions.act_window">
+        <field name="name">Sync Logs</field>
+        <field name="res_model">shopify.sync.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="shopify_sync_log_view_search"/>
+        <field name="context">{'search_default_last_week': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing logged yet</p>
+            <p>Every import writes here: what was fetched, which customers and
+               products were resolved, and exactly why an order failed.</p>
+        </field>
+    </record>
+
+</odoo>

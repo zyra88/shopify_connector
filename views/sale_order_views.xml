@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_order_form_shopify" model="ir.ui.view">
+        <field name="name">sale.order.form.shopify</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <div name="button_box" position="inside">
+                <button name="action_view_shopify_order" type="object"
+                        class="oe_stat_button" icon="fa-shopping-basket"
+                        string="Shopify"
+                        groups="shopify_connector.group_shopify_user"
+                        invisible="not shopify_order_ref_id"/>
+            </div>
+
+            <group name="sale_reporting" position="after">
+                <group name="shopify_info" string="Shopify"
+                       groups="shopify_connector.group_shopify_user"
+                       invisible="not shopify_store_id">
+                    <field name="shopify_store_id" readonly="1"/>
+                    <field name="shopify_order_name" readonly="1"/>
+                    <field name="shopify_order_id" readonly="1" groups="base.group_no_one"/>
+                    <field name="shopify_financial_status" readonly="1"/>
+                    <field name="shopify_fulfillment_status" readonly="1"/>
+                    <field name="shopify_payment_gateway" readonly="1"/>
+                    <field name="shopify_tags" readonly="1" invisible="not shopify_tags"/>
+                    <field name="shopify_created_at" readonly="1"/>
+                    <field name="shopify_updated_at" readonly="1"/>
+                    <field name="shopify_order_ref_id" invisible="1"/>
+                </group>
+            </group>
+
+            <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
+                <field name="shopify_line_type" optional="hide" readonly="1"
+                       groups="shopify_connector.group_shopify_user"/>
+                <field name="shopify_sku" optional="hide" readonly="1"
+                       groups="shopify_connector.group_shopify_user"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_sales_order_filter_shopify" model="ir.ui.view">
+        <field name="name">sale.order.search.shopify</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_sales_order_filter"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="shopify_order_name" string="Shopify Order"
+                       groups="shopify_connector.group_shopify_user"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_order_tree_shopify" model="ir.ui.view">
+        <field name="name">sale.order.list.shopify</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_tree"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="shopify_order_name" optional="hide"
+                       groups="shopify_connector.group_shopify_user"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

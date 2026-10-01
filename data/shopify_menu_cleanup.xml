@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <delete model="ir.ui.menu"
+            search="[('name', '=', 'Fetch from Shopify'), ('parent_id.name', '=', 'Mappings')]"/>
+    <delete model="ir.ui.menu"
+            search="[('name', '=', 'Variant Mappings'), ('action', '=', ref('action_shopify_variant_mapping'))]"/>
+    <delete model="ir.actions.server"
+            search="[('name', '=', 'Fetch Product Catalog')]"/>
+    <delete model="ir.ui.menu"
+            search="[('name', '=', 'Recover Order')]"/>
+    <delete model="ir.ui.view"
+            search="[('model', '=', 'shopify.recover.order.wizard')]"/>
+    <delete model="ir.actions.act_window"
+            search="[('res_model', '=', 'shopify.recover.order.wizard')]"/>
+</odoo>

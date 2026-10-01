@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============ Link Templates (Shopify product ↔ Odoo template) ============ -->
+
+    <record id="shopify_product_mapping_view_list" model="ir.ui.view">
+        <field name="name">shopify.product.mapping.list</field>
+        <field name="model">shopify.product.mapping</field>
+        <field name="arch" type="xml">
+            <list string="Link Templates" editable="bottom" create="false" delete="false"
+                  decoration-success="connection_state == 'connected'"
+                  decoration-warning="connection_state == 'partial'"
+                  decoration-muted="connection_state == 'not_connected'">
+                <header>
+                    <button name="action_open_fetch_wizard" type="object"
+                            string="Fetch from Shopify" class="btn-primary" icon="fa-download"/>
+                </header>
+                <field name="shopify_title" string="Shopify Product" readonly="1"/>
+                <field name="shopify_product_id" string="Shopify ID" readonly="1" optional="hide"/>
+                <field name="product_tmpl_id" string="Odoo Product Template"
+                       options="{'no_create': True}"/>
+                <field name="variant_mapped_count" string="Variants Linked"/>
+                <field name="variant_total_count" string="Variants Total"/>
+                <field name="connection_state" string="Status" widget="badge"
+                       decoration-success="connection_state == 'connected'"
+                       decoration-warning="connection_state == 'partial'"
+                       decoration-danger="connection_state == 'not_connected'"/>
+                <button name="action_open_variants" type="object"
+                        string="Link Variants" icon="fa-link" class="btn-link"/>
+                <field name="store_id" optional="show"/>
+                <field name="last_synced_at" optional="hide"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shopify_product_mapping_view_form" model="ir.ui.view">
+        <field name="name">shopify.product.mapping.form</field>
+        <field name="model">shopify.product.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Link Template">
+                <header>
+                    <button name="action_open_variants" type="object"
+                            string="Link Variants" class="btn-primary" icon="fa-link"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_variants" type="object"
+                                class="oe_stat_button" icon="fa-exchange">
+                            <field name="variant_mapped_count" widget="statinfo"
+                                   string="Variants Linked"/>
+                        </button>
+                    </div>
+                    <widget name="web_ribbon" title="Connected" bg_color="text-bg-success"
+                            invisible="connection_state != 'connected'"/>
+                    <widget name="web_ribbon" title="Partially Connected" bg_color="text-bg-warning"
+                            invisible="connection_state != 'partial'"/>
+                    <widget name="web_ribbon" title="Not Connected" bg_color="text-bg-danger"
+                            invisible="connection_state != 'not_connected'"/>
+                    <group>
+                        <group string="Shopify">
+                            <field name="store_id" readonly="1"/>
+                            <field name="shopify_product_id" readonly="1"/>
+                            <field name="shopify_title" readonly="1"/>
+                        </group>
+                        <group string="Odoo">
+                            <field name="product_tmpl_id"
+                                   options="{'no_create': True}"/>
+                            <field name="variant_total_count" readonly="1"/>
+                            <field name="variant_mapped_count" readonly="1"/>
+                            <field name="connection_state" readonly="1"/>
+                            <field name="last_synced_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Linked Variants" name="variants">
+                            <field name="variant_mapping_ids" readonly="1">
+                                <list>
+                                    <field name="shopify_variant_id"/>
+                                    <field name="product_id"/>
+                                    <field name="sku"/>
+                                    <field name="match_source"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_product_mapping_view_search" model="ir.ui.view">
+        <field name="name">shopify.product.mapping.search</field>
+        <field name="model">shopify.product.mapping</field>
+        <field name="arch" type="xml">
+            <search string="Link Templates">
+                <field name="shopify_title"/>
+                <field name="shopify_product_id"/>
+                <field name="product_tmpl_id"/>
+                <field name="store_id"/>
+                <filter name="not_connected" string="Not Connected"
+                        domain="[('connection_state', '=', 'not_connected')]"/>
+                <filter name="partial" string="Partially Connected"
+                        domain="[('connection_state', '=', 'partial')]"/>
+                <filter name="connected" string="Connected"
+                        domain="[('connection_state', '=', 'connected')]"/>
+                <filter name="no_template" string="No Odoo Template"
+                        domain="[('product_tmpl_id', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'connection_state'}"/>
+                    <filter name="group_store" string="Store"
+                            context="{'group_by': 'store_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_shopify_product_mapping" model="ir.actions.act_window">
+        <field name="name">Link Templates</field>
+        <field name="res_model">shopify.product.mapping</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="shopify_product_mapping_view_search"/>
+        <field name="context">{'search_default_not_connected': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No Shopify products loaded yet</p>
+            <p>
+                <strong>Step 1:</strong>
+                <a type="action" name="%(shopify_connector.action_shopify_fetch_catalog_wizard)d"
+                   class="btn btn-primary">Fetch from Shopify</a>
+            </p>
+            <p class="mt-2">
+                <strong>Step 2:</strong> Pick the matching <em>Odoo Product Template</em> for each
+                Shopify product on this screen.
+            </p>
+            <p>
+                <strong>Step 3:</strong> Open <em>Link Variants</em> to connect each Shopify
+                size/color to the correct Odoo variant.
+            </p>
+        </field>
+    </record>
+
+    <!-- ============ Technical: variant mappings (order importer lookup) ============ -->
+
+    <record id="shopify_variant_mapping_view_list" model="ir.ui.view">
+        <field name="name">shopify.variant.mapping.list</field>
+        <field name="model">shopify.variant.mapping</field>
+        <field name="arch" type="xml">
+            <list string="Variant Mappings" editable="bottom">
+                <field name="store_id" optional="show"/>
+                <field name="shopify_variant_id"/>
+                <field name="shopify_product_id" optional="show"/>
+                <field name="product_id"/>
+                <field name="sku" optional="show"/>
+                <field name="barcode" optional="hide"/>
+                <field name="match_source" optional="show"/>
+                <field name="last_synced_at" optional="hide"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shopify_variant_mapping_view_form" model="ir.ui.view">
+        <field name="name">shopify.variant.mapping.form</field>
+        <field name="model">shopify.variant.mapping</field>
+        <field name="arch" type="xml">
+            <form string="Variant Mapping">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="store_id"/>
+                            <field name="shopify_variant_id"/>
+                            <field name="shopify_product_id"/>
+                        </group>
+                        <group>
+                            <field name="product_id"/>
+                            <field name="sku"/>
+                            <field name="barcode"/>
+                            <field name="match_source"/>
+                            <field name="last_synced_at"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_variant_mapping_view_search" model="ir.ui.view">
+        <field name="name">shopify.variant.mapping.search</field>
+        <field name="model">shopify.variant.mapping</field>
+        <field name="arch" type="xml">
+            <search string="Variant Mappings">
+                <field name="product_id"/>
+                <field name="shopify_variant_id"/>
+                <field name="shopify_product_id"/>
+                <field name="sku"/>
+                <field name="barcode"/>
+                <field name="store_id"/>
+                <filter name="manual" string="Mapped Manually" domain="[('match_source', '=', 'manual')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
+                    <filter name="group_source" string="Matched By" context="{'group_by': 'match_source'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_shopify_variant_mapping" model="ir.actions.act_window">
+        <field name="name">Variant Mappings</field>
+        <field name="res_model">shopify.variant.mapping</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="shopify_variant_mapping_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No variant mappings yet</p>
+            <p>Technical table used by the order importer. Rows are created
+               automatically when you link variants on the <em>Link Variants</em> screen.</p>
+        </field>
+    </record>
+
+</odoo>

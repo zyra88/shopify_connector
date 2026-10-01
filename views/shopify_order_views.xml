@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="shopify_order_view_list" model="ir.ui.view">
+        <field name="name">shopify.order.list</field>
+        <field name="model">shopify.order</field>
+        <field name="arch" type="xml">
+            <list string="Shopify Orders" create="false"
+                  decoration-danger="state == 'failed'"
+                  decoration-warning="state == 'needs_review'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="shopify_created_at" string="Order Date"/>
+                <field name="shopify_order_name" string="Shopify Order"/>
+                <field name="store_id" optional="show"/>
+                <field name="partner_id"/>
+                <field name="is_guest_order" optional="hide" string="Guest"/>
+                <field name="financial_status" optional="show"/>
+                <field name="fulfillment_status" optional="hide"/>
+                <field name="payment_gateway" optional="hide"/>
+                <field name="shopify_total" sum="Shopify Total"/>
+                <field name="odoo_total" sum="Odoo Total" optional="show"/>
+                <field name="amount_difference" optional="hide"/>
+                <field name="sale_order_id" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'imported'"
+                       decoration-warning="state == 'needs_review'"
+                       decoration-danger="state == 'failed'"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shopify_order_view_form" model="ir.ui.view">
+        <field name="name">shopify.order.form</field>
+        <field name="model">shopify.order</field>
+        <field name="arch" type="xml">
+            <form string="Shopify Order" create="false" edit="false">
+                <header>
+                    <button name="action_retry_import" type="object" string="Retry Import"
+                            class="btn-primary" invisible="state == 'imported'"/>
+                    <button name="action_refetch_and_import" type="object"
+                            string="Re-fetch from Shopify"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,imported,needs_review"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_sale_order" type="object" class="oe_stat_button"
+                                icon="fa-shopping-cart" invisible="not sale_order_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Sale Order</span>
+                                <span class="o_stat_value"><field name="sale_order_state"/></span>
+                            </div>
+                        </button>
+                        <button name="action_view_logs" type="object" class="oe_stat_button"
+                                icon="fa-list-alt" string="Logs"/>
+                    </div>
+
+                    <widget name="web_ribbon" title="Needs Review" bg_color="text-bg-warning"
+                            invisible="state != 'needs_review'"/>
+                    <widget name="web_ribbon" title="Failed" bg_color="text-bg-danger"
+                            invisible="state != 'failed'"/>
+
+                    <div class="oe_title">
+                        <h1><field name="shopify_order_name" readonly="1"/></h1>
+                    </div>
+
+                    <div class="alert alert-warning" role="alert" invisible="not review_reason">
+                        <field name="review_reason" nolabel="1" readonly="1"/>
+                    </div>
+                    <div class="alert alert-danger" role="alert" invisible="not error_message">
+                        <field name="error_message" nolabel="1" readonly="1"/>
+                    </div>
+
+                    <group>
+                        <group string="Shopify">
+                            <field name="store_id"/>
+                            <field name="shopify_order_id"/>
+                            <field name="shopify_order_number"/>
+                            <field name="shopify_created_at"/>
+                            <field name="shopify_updated_at"/>
+                            <field name="financial_status"/>
+                            <field name="fulfillment_status"/>
+                            <field name="payment_gateway"/>
+                            <field name="tags"/>
+                            <field name="discount_codes" invisible="not discount_codes"/>
+                        </group>
+                        <group string="Odoo">
+                            <field name="partner_id"/>
+                            <field name="partner_invoice_id"/>
+                            <field name="partner_shipping_id"/>
+                            <field name="is_guest_order"/>
+                            <field name="shopify_customer_id"/>
+                            <field name="customer_mapping_id"/>
+                            <field name="sale_order_id"/>
+                            <field name="last_sync_at"/>
+                            <field name="import_count"/>
+                        </group>
+                    </group>
+
+                    <group string="Amounts">
+                        <group>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="shopify_subtotal"/>
+                            <field name="shopify_total_discounts"/>
+                            <field name="shopify_total_shipping"/>
+                            <field name="shopify_total_tax"/>
+                            <field name="taxes_included"/>
+                        </group>
+                        <group>
+                            <field name="shopify_total"/>
+                            <field name="odoo_total"/>
+                            <field name="amount_difference"
+                                   decoration-danger="not is_reconciled"/>
+                            <field name="is_reconciled" widget="boolean_toggle" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Lines" name="lines">
+                            <field name="line_ids" readonly="1">
+                                <list decoration-danger="resolution_state == 'unmatched'">
+                                    <field name="sequence" column_invisible="True"/>
+                                    <field name="name"/>
+                                    <field name="sku"/>
+                                    <field name="shopify_variant_id" optional="show"/>
+                                    <field name="shopify_product_id" optional="hide"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit"/>
+                                    <field name="discount_amount"/>
+                                    <field name="tax_amount" optional="hide"/>
+                                    <field name="price_subtotal"/>
+                                    <field name="product_id"/>
+                                    <field name="match_source" optional="show"/>
+                                    <field name="resolution_state" widget="badge"
+                                           decoration-success="resolution_state == 'matched'"
+                                           decoration-danger="resolution_state == 'unmatched'"/>
+                                    <field name="resolution_message" optional="show"/>
+                                    <field name="currency_id" column_invisible="True"/>
+                                    <button name="action_map_product" type="object"
+                                            string="Map" icon="fa-link"
+                                            invisible="resolution_state == 'matched'"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Addresses" name="addresses">
+                            <group>
+                                <group string="Billing Address">
+                                    <field name="billing_address" nolabel="1" readonly="1"/>
+                                </group>
+                                <group string="Shipping Address">
+                                    <field name="shipping_address" nolabel="1" readonly="1"/>
+                                </group>
+                            </group>
+                            <group>
+                                <field name="email"/>
+                                <field name="phone"/>
+                            </group>
+                        </page>
+                        <page string="Note" name="note" invisible="not note">
+                            <field name="note" nolabel="1" readonly="1"/>
+                        </page>
+                        <page string="Logs" name="logs">
+                            <field name="log_ids" readonly="1">
+                                <list decoration-danger="level == 'error'"
+                                      decoration-warning="level == 'warning'">
+                                    <field name="create_date" string="When"/>
+                                    <field name="level"/>
+                                    <field name="operation"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Shopify Payload" name="payload" groups="base.group_no_one">
+                            <field name="payload" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_order_view_search" model="ir.ui.view">
+        <field name="name">shopify.order.search</field>
+        <field name="model">shopify.order</field>
+        <field name="arch" type="xml">
+            <search string="Shopify Orders">
+                <field name="shopify_order_name" string="Shopify Order"
+                       filter_domain="['|', '|', ('shopify_order_name', 'ilike', self), ('shopify_order_id', '=', self), ('email', 'ilike', self)]"/>
+                <field name="partner_id"/>
+                <field name="store_id"/>
+                <field name="sale_order_id"/>
+                <filter name="needs_review" string="Needs Review" domain="[('state', '=', 'needs_review')]"/>
+                <filter name="failed" string="Failed" domain="[('state', '=', 'failed')]"/>
+                <filter name="imported" string="Imported" domain="[('state', '=', 'imported')]"/>
+                <separator/>
+                <filter name="not_reconciled" string="Totals Mismatch" domain="[('is_reconciled', '=', False), ('sale_order_id', '!=', False)]"/>
+                <filter name="guest" string="Guest Orders" domain="[('is_guest_order', '=', True)]"/>
+                <filter name="no_sale_order" string="Without Sale Order" domain="[('sale_order_id', '=', False)]"/>
+                <separator/>
+                <filter name="last_month" string="Last 30 Days"
+                        domain="[('shopify_created_at', '&gt;=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_financial" string="Financial Status" context="{'group_by': 'financial_status'}"/>
+                    <filter name="group_gateway" string="Payment Method" context="{'group_by': 'payment_gateway'}"/>
+                    <filter name="group_date" string="Order Date" context="{'group_by': 'shopify_created_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_shopify_order" model="ir.actions.act_window">
+        <field name="name">Shopify Orders</field>
+        <field name="res_model">shopify.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="shopify_order_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No Shopify orders imported yet</p>
+            <p>Configure a store, test the connection, then click
+               <b>Import Orders</b>. Every order gets a record here, whether it
+               became a sale order or needs attention first.</p>
+        </field>
+    </record>
+
+    <record id="action_shopify_order_retry_import" model="ir.actions.server">
+        <field name="name">Retry Import</field>
+        <field name="model_id" ref="model_shopify_order"/>
+        <field name="binding_model_id" ref="model_shopify_order"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">action = records.action_retry_import()</field>
+    </record>
+
+    <record id="action_shopify_order_needs_review" model="ir.actions.act_window">
+        <field name="name">Needs Review</field>
+        <field name="res_model">shopify.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="shopify_order_view_search"/>
+        <field name="domain">[('state', 'in', ('needs_review', 'failed'))]</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing to review</p>
+            <p>Orders land here when a product could not be matched, a customer
+               could not be identified, or the Odoo total does not agree with
+               what Shopify charged.</p>
+        </field>
+    </record>
+
+</odoo>

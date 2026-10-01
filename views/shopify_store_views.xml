@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="shopify_store_view_list" model="ir.ui.view">
+        <field name="name">shopify.store.list</field>
+        <field name="model">shopify.store</field>
+        <field name="arch" type="xml">
+            <list string="Shopify Stores">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="shop_domain"/>
+                <field name="api_protocol"/>
+                <field name="api_version"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="currency_id"/>
+                <field name="last_order_sync_date"/>
+                <field name="auto_sync" widget="boolean_toggle"/>
+                <field name="connection_state" widget="badge"
+                       decoration-success="connection_state == 'connected'"
+                       decoration-danger="connection_state == 'error'"
+                       decoration-muted="connection_state == 'draft'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shopify_store_view_form" model="ir.ui.view">
+        <field name="name">shopify.store.form</field>
+        <field name="model">shopify.store</field>
+        <field name="arch" type="xml">
+            <form string="Shopify Store">
+                <header>
+                    <button name="action_test_connection" type="object" string="Test Connection"
+                            class="btn-secondary" icon="fa-plug"/>
+                    <button name="action_sync_products" type="object" string="Sync Product IDs"
+                            class="btn-secondary" icon="fa-refresh"
+                            invisible="connection_state != 'connected'"
+                            confirm="Fetch Shopify products and map variant IDs onto Odoo products by SKU or barcode?"/>
+                    <button name="action_import_orders" type="object" string="Import Orders"
+                            class="btn-primary" icon="fa-download"
+                            invisible="connection_state != 'connected'"
+                            confirm="Fetch new and updated Shopify orders and turn them into sale orders?"/>
+                    <button name="%(action_shopify_import_orders_wizard)d" type="action"
+                            string="Advanced Import" icon="fa-sliders"
+                            context="{'default_store_id': id}"
+                            invisible="connection_state != 'connected'"/>
+                    <field name="connection_state" widget="statusbar"
+                           statusbar_visible="draft,connected"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_shopify_orders" type="object"
+                                class="oe_stat_button" icon="fa-shopping-basket">
+                            <field name="shopify_order_count" widget="statinfo" string="Shopify Orders"/>
+                        </button>
+                        <button name="action_view_needs_review" type="object"
+                                class="oe_stat_button" icon="fa-exclamation-triangle"
+                                invisible="needs_review_count == 0">
+                            <field name="needs_review_count" widget="statinfo" string="Needs Review"/>
+                        </button>
+                        <button name="action_view_sale_orders" type="object"
+                                class="oe_stat_button" icon="fa-shopping-cart">
+                            <field name="sale_order_count" widget="statinfo" string="Sale Orders"/>
+                        </button>
+                        <button name="action_view_customer_mappings" type="object"
+                                class="oe_stat_button" icon="fa-users">
+                            <field name="customer_mapping_count" widget="statinfo" string="Customers"/>
+                        </button>
+                        <button name="action_view_link_variants" type="object"
+                                class="oe_stat_button" icon="fa-link">
+                            <field name="variant_mapping_count" widget="statinfo" string="Linked Variants"/>
+                        </button>
+                        <button name="action_view_queue" type="object"
+                                class="oe_stat_button" icon="fa-tasks"
+                                invisible="queue_count == 0">
+                            <field name="queue_count" widget="statinfo" string="Queue"/>
+                        </button>
+                        <button name="action_view_logs" type="object"
+                                class="oe_stat_button" icon="fa-list-alt">
+                            <field name="error_log_count" widget="statinfo" string="Errors"/>
+                        </button>
+                    </div>
+
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Trekiva EU Store"/></h1>
+                    </div>
+
+                    <div class="alert alert-danger" role="alert"
+                         invisible="connection_state != 'error' or not connection_message">
+                        <field name="connection_message" nolabel="1" readonly="1"/>
+                    </div>
+
+                    <group>
+                        <group string="Shopify Connection">
+                            <field name="shop_domain" placeholder="mystore.myshopify.com"/>
+                            <field name="client_id"
+                                   placeholder="fb2cf3632a1f32a4b7836559da18198e"
+                                   groups="shopify_connector.group_shopify_manager"/>
+                            <field name="client_secret" password="True"
+                                   placeholder="shpss_..."
+                                   groups="shopify_connector.group_shopify_manager"/>
+                            <field name="access_token_expires_at"
+                                   groups="shopify_connector.group_shopify_manager"/>
+                            <field name="api_version"/>
+                            <field name="api_protocol"/>
+                        </group>
+                        <group string="Odoo Company">
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="currency_id" options="{'no_create': True}"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Sale Order Defaults" name="defaults">
+                            <group>
+                                <group>
+                                    <field name="warehouse_id" options="{'no_create': True}"/>
+                                    <field name="pricelist_id" options="{'no_create': True}"/>
+                                    <field name="payment_term_id" options="{'no_create': True}"/>
+                                </group>
+                                <group>
+                                    <field name="team_id" options="{'no_create': True}"/>
+                                    <field name="user_id" options="{'no_create': True}"/>
+                                    <field name="use_custom_sale_order_prefix"/>
+                                    <field name="sale_order_prefix"
+                                           invisible="not use_custom_sale_order_prefix"
+                                           required="use_custom_sale_order_prefix"/>
+                                </group>
+                            </group>
+                            <group string="Behaviour">
+                                <field name="auto_confirm_order"/>
+                                <field name="import_order_note"/>
+                                <field name="warehouse_on_order"/>
+                                <field name="amount_tolerance"/>
+                            </group>
+                        </page>
+
+                        <page string="Order Import" name="order_import">
+                            <group>
+                                <group string="Scope">
+                                    <field name="order_import_from_date"/>
+                                    <field name="import_order_status"/>
+                                    <field name="import_financial_status"/>
+                                    <field name="import_fulfillment_status"/>
+                                    <field name="import_test_orders"/>
+                                </group>
+                                <group string="Scheduling">
+                                    <field name="last_order_sync_date"/>
+                                    <field name="sync_overlap_minutes"/>
+                                    <field name="auto_sync"/>
+                                    <field name="page_size"/>
+                                    <field name="max_orders_per_run"/>
+                                    <button name="action_reset_sync_cursor" type="object"
+                                            string="Reset Sync Cursor" class="btn-link"
+                                            icon="fa-undo"/>
+                                </group>
+                            </group>
+                            <div class="text-muted">
+                                Scheduled sync also needs the
+                                <b>Shopify: Import Orders</b> scheduled action to be active
+                                (Settings &gt; Technical &gt; Scheduled Actions).
+                            </div>
+                        </page>
+
+                        <page string="Customers" name="customers">
+                            <group>
+                                <group string="Matching Priority">
+                                    <div class="text-muted" colspan="2">
+                                        Shopify mapping, then Shopify customer ID, then the
+                                        options below. A new customer is only created when
+                                        every step fails.
+                                    </div>
+                                    <field name="match_customer_by_email"/>
+                                    <field name="match_customer_by_phone"/>
+                                </group>
+                                <group string="On Match">
+                                    <field name="update_existing_customer"/>
+                                    <field name="customer_tag_ids" widget="many2many_tags"
+                                           options="{'color_field': 'color'}"/>
+                                    <field name="guest_partner_id"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Products &amp; Taxes" name="products">
+                            <group>
+                                <group string="Product Matching">
+                                    <div class="text-muted" colspan="2">
+                                        Variant mapping, then Shopify variant ID, then the
+                                        options below. Products are never matched by name.
+                                    </div>
+                                    <field name="match_product_by_sku"/>
+                                    <field name="match_product_by_attributes"/>
+                                    <field name="match_product_by_barcode"/>
+                                    <field name="write_sku_on_match"/>
+                                    <field name="last_product_sync_date" readonly="1"/>
+                                    <div class="text-muted" colspan="2">
+                                        Use <b>Sync Product IDs</b> on the store to pull
+                                        Shopify product and variant ids onto Odoo products
+                                        that share the same SKU or barcode.
+                                    </div>
+                                </group>
+                                <group string="Service Products">
+                                    <field name="shipping_product_id" options="{'no_create': True}"/>
+                                    <field name="discount_product_id" options="{'no_create': True}"/>
+                                    <div class="text-muted" colspan="2">
+                                        Left empty, these are created on first use.
+                                    </div>
+                                </group>
+                            </group>
+                            <group string="Taxes">
+                                <field name="tax_mode"/>
+                                <field name="tax_account_prefix" invisible="tax_mode != 'shopify'"/>
+                            </group>
+                        </page>
+
+                        <page string="Shopify Info" name="shop_info"
+                              invisible="connection_state == 'draft'">
+                            <group>
+                                <group>
+                                    <field name="shop_name"/>
+                                    <field name="shop_email"/>
+                                    <field name="shop_currency_code"/>
+                                </group>
+                                <group>
+                                    <field name="shop_timezone"/>
+                                    <field name="shop_plan"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_store_view_search" model="ir.ui.view">
+        <field name="name">shopify.store.search</field>
+        <field name="model">shopify.store</field>
+        <field name="arch" type="xml">
+            <search string="Shopify Stores">
+                <field name="name"/>
+                <field name="shop_domain"/>
+                <filter name="connected" string="Connected" domain="[('connection_state', '=', 'connected')]"/>
+                <filter name="scheduled" string="Scheduled Sync" domain="[('auto_sync', '=', True)]"/>
+                <separator/>
+                <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_shopify_store" model="ir.actions.act_window">
+        <field name="name">Shopify Stores</field>
+        <field name="res_model">shopify.store</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="shopify_store_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Connect your first Shopify store</p>
+            <p>Create a custom app in your Shopify admin with the
+               <b>read_orders</b>, <b>read_customers</b> and <b>read_products</b>
+               scopes, paste its Admin API access token here, then click
+               <b>Test Connection</b>.</p>
+        </field>
+    </record>
+
+</odoo>

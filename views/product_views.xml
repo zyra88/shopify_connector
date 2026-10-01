@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Product template form.
+
+         Placement mirrors Barcode on purpose: the Shopify Variant ID is only
+         meaningful on the template while the template has a single variant.
+         The Shopify Product ID is genuinely template-level, so it stays
+         visible either way. -->
+    <record id="product_template_only_form_view_shopify" model="ir.ui.view">
+        <field name="name">product.template.form.shopify</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <field name="barcode" position="after">
+                <field name="shopify_product_id"
+                       placeholder="e.g. 8412345678901"
+                       groups="shopify_connector.group_shopify_user"/>
+                <field name="shopify_variant_id"
+                       placeholder="e.g. 45123456789012"
+                       groups="shopify_connector.group_shopify_user"
+                       invisible="product_variant_count &gt; 1
+                           or (product_variant_count == 0
+                           and valid_product_template_attribute_line_ids)"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- Product variant form (inherits the template form, so the fields above
+         are already present; only the variant-specific id is added here). -->
+    <record id="product_normal_form_view_shopify" model="ir.ui.view">
+        <field name="name">product.product.form.shopify</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_normal_form_view"/>
+        <field name="arch" type="xml">
+            <field name="barcode" position="after">
+                <field name="shopify_variant_id"
+                       placeholder="e.g. 45123456789012"
+                       groups="shopify_connector.group_shopify_user"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="product_variant_easy_edit_view_shopify" model="ir.ui.view">
+        <field name="name">product.product.variant.easy.edit.shopify</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_variant_easy_edit_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='codes']" position="inside">
+                <field name="shopify_variant_id" groups="shopify_connector.group_shopify_user"/>
+                <field name="shopify_product_id" readonly="1"
+                       groups="shopify_connector.group_shopify_user"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_template_tree_view_shopify" model="ir.ui.view">
+        <field name="name">product.template.list.shopify</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="barcode" position="after">
+                <field name="shopify_product_id" optional="hide"
+                       groups="shopify_connector.group_shopify_user"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="product_product_tree_view_shopify" model="ir.ui.view">
+        <field name="name">product.product.list.shopify</field>
+        <field name="model">product.product</field>
+        <field name="inherit_id" ref="product.product_product_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="barcode" position="after">
+                <field name="shopify_variant_id" optional="hide"
+                       groups="shopify_connector.group_shopify_user"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="product_template_search_view_shopify" model="ir.ui.view">
+        <field name="name">product.template.search.shopify</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <field name="name" position="after">
+                <field name="shopify_product_id" string="Shopify Product ID"
+                       groups="shopify_connector.group_shopify_user"/>
+                <field name="shopify_variant_id" string="Shopify Variant ID"
+                       groups="shopify_connector.group_shopify_user"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

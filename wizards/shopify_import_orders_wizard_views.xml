@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="shopify_import_orders_wizard_view_form" model="ir.ui.view">
+        <field name="name">shopify.import.orders.wizard.form</field>
+        <field name="model">shopify.import.orders.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Shopify Orders">
+                <group>
+                    <field name="store_id" options="{'no_create': True}"/>
+                    <field name="connection_state" invisible="1"/>
+                    <field name="last_sync_date" readonly="1"/>
+                    <field name="mode" widget="radio"/>
+                </group>
+                <div class="alert alert-warning" role="alert"
+                     invisible="connection_state == 'connected'">
+                    This store has not been connected yet. Run
+                    <b>Test Connection</b> on the store first.
+                </div>
+                <group invisible="mode != 'from_date'">
+                    <field name="updated_at_min" required="mode == 'from_date'"/>
+                </group>
+                <group invisible="mode != 'specific'">
+                    <field name="order_ids_text" required="mode == 'specific'"
+                           placeholder="e.g. 5123456789012, 5123456789013"/>
+                </group>
+                <group>
+                    <field name="max_orders"/>
+                </group>
+                <div class="text-muted">
+                    Re-importing an order never creates duplicates: customers,
+                    sale orders and lines are keyed on their Shopify ids.
+                </div>
+                <footer>
+                    <button name="action_import" type="object" string="Import"
+                            class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_shopify_import_orders_wizard" model="ir.actions.act_window">
+        <field name="name">Import Shopify Orders</field>
+        <field name="res_model">shopify.import.orders.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>
