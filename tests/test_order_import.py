@@ -48,6 +48,47 @@ class TestOrderImport(ShopifyConnectorCase):
 
         self.assertEqual(record.sale_order_id.name, 'SH/#1001')
 
+    def test_order_from_empty_when_not_configured(self):
+        self.store.order_from = False
+        self.assertEqual(self.store.get_order_from_sale_order_values(), {})
+
+    def test_get_order_from_sale_order_values(self):
+        store_model = type(self.env['shopify.store'])
+        with patch.object(
+            store_model,
+            '_get_order_from_selection',
+            return_value=[('Website', 'Website')],
+        ), patch.object(
+            store_model,
+            '_sale_order_order_from_field_name',
+            return_value='x_studio_order_from_1',
+        ):
+            self.store.order_from = 'Website'
+            self.assertEqual(
+                self.store.get_order_from_sale_order_values(),
+                {'x_studio_order_from_1': 'Website'},
+            )
+
+    def test_prepare_sale_order_merges_order_from(self):
+        record = self.import_payload(self.order_payload(shopify_id='55000000000098'))
+        importer = self.env['shopify.order.importer']
+        with patch.object(
+            type(self.store),
+            'get_order_from_sale_order_values',
+            return_value={'x_studio_order_from_1': 'Website'},
+        ):
+            values = importer._prepare_sale_order_values(
+                self.store,
+                record,
+                self.order_payload(shopify_id='55000000000098'),
+                {
+                    'partner': record.partner_id,
+                    'partner_invoice': record.partner_invoice_id,
+                    'partner_shipping': record.partner_shipping_id,
+                },
+            )
+        self.assertEqual(values.get('x_studio_order_from_1'), 'Website')
+
     def test_customer_is_resolved_before_the_sale_order_exists(self):
         """The partner must already exist when ``sale.order`` is created."""
         created_order_partners = []

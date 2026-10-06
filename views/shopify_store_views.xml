@@ -125,6 +125,9 @@
                                 <group>
                                     <field name="team_id" options="{'no_create': True}"/>
                                     <field name="user_id" options="{'no_create': True}"/>
+                                    <field name="order_from_available" invisible="1"/>
+                                    <field name="order_from"
+                                           invisible="not order_from_available"/>
                                     <field name="use_custom_sale_order_prefix"/>
                                     <field name="sale_order_prefix"
                                            invisible="not use_custom_sale_order_prefix"

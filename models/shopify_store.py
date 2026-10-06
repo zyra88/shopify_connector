@@ -112,6 +112,14 @@ class ShopifyStore(models.Model):
         string='Sale Order Prefix',
         help="Only used when Custom Sale Order Name is enabled, "
              "e.g. SH/ turns Shopify #1001 into SH/#1001.")
+    order_from_available = fields.Boolean(
+        compute='_compute_order_from_available',
+        help="Technical: True when sale.order has an Order From selection field.")
+    order_from = fields.Selection(
+        selection='_get_order_from_selection',
+        string='Order From',
+        help="Written on every imported sale order. Options come from your "
+             "Order From field on Quotations (e.g. Website, Amazon).")
     auto_confirm_order = fields.Boolean(
         string='Auto-Confirm Sale Orders',
         help="Confirm imported orders automatically. Leave off until product "
@@ -556,6 +564,53 @@ class ShopifyStore(models.Model):
     def action_reset_sync_cursor(self):
         self.sudo().write({'last_order_sync_date': False})
         return self._notify(_("Sync cursor cleared. The next import starts from the configured date."))
+
+    # ------------------------------------------------------------------
+    # Order From (Studio field on sale.order)
+    # ------------------------------------------------------------------
+
+    @api.model
+    def _sale_order_order_from_field_names(self):
+        return ('x_studio_order_from_1', 'x_studio_order_from')
+
+    @api.model
+    def _sale_order_order_from_field_name(self):
+        """Return the technical name of the Order From field, if installed."""
+        SaleOrder = self.env['sale.order']
+        for field_name in self._sale_order_order_from_field_names():
+            field = SaleOrder._fields.get(field_name)
+            if field and field.type == 'selection':
+                return field_name
+        return False
+
+    @api.model
+    def _get_order_from_selection(self):
+        """Populate store options from the sale.order Order From field."""
+        SaleOrder = self.env['sale.order']
+        field_name = self._sale_order_order_from_field_name()
+        if not field_name:
+            return []
+        field = SaleOrder._fields[field_name]
+        selection = field.selection
+        if callable(selection):
+            selection = selection(SaleOrder)
+        return list(selection or [])
+
+    @api.depends()
+    def _compute_order_from_available(self):
+        available = bool(self._sale_order_order_from_field_name())
+        for store in self:
+            store.order_from_available = available
+
+    def get_order_from_sale_order_values(self):
+        """Values to merge into sale.order when importing."""
+        self.ensure_one()
+        if not self.order_from:
+            return {}
+        field_name = self._sale_order_order_from_field_name()
+        if field_name:
+            return {field_name: self.order_from}
+        return {}
 
     # ------------------------------------------------------------------
     # Default products

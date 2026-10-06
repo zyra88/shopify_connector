@@ -322,6 +322,7 @@ class ShopifyOrderImporter(models.AbstractModel):
                 store.sale_order_prefix,
                 record.shopify_order_name or record.shopify_order_id,
             )
+        values.update(store.get_order_from_sale_order_values())
         return values
 
     @api.model
