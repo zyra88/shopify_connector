@@ -59,10 +59,14 @@ class ShopifyCustomerResolver(models.AbstractModel):
 
         if partner:
             notes.append(_("Customer matched by %s.", matched_by))
+            owned = bool(partner.shopify_customer_id or partner.shopify_mapping_ids)
             self._update_partner(store, partner, customer, billing, shipping, email, phone, is_guest)
         else:
             partner = self._create_partner(store, customer, billing, shipping, email, phone, payload)
             notes.append(_("Customer created from the Shopify order."))
+            owned = True
+        if owned:
+            self._set_receivable_account(store, partner)
 
         if shopify_customer_id:
             mapping = self.env['shopify.customer.mapping'].upsert(
@@ -191,6 +195,13 @@ class ShopifyCustomerResolver(models.AbstractModel):
         partner = self.env['res.partner'].sudo().create(values)
         _logger.info("Shopify: created customer %s (%s)", partner.display_name, partner.id)
         return partner
+
+    @api.model
+    def _set_receivable_account(self, store, partner):
+        account = store.receivable_account_id
+        partner = partner.sudo().with_company(store.company_id)
+        if account and partner.property_account_receivable_id != account:
+            partner.property_account_receivable_id = account
 
     @api.model
     def _update_partner(self, store, partner, customer, billing, shipping, email, phone, is_guest=False):

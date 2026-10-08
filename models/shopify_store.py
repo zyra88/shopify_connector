@@ -17,6 +17,18 @@ _logger = logging.getLogger(__name__)
 TOKEN_REFRESH_MARGIN_SECONDS = 300
 # Shopify REST ``ids`` filter batch size when re-fetching orders for Studio Order ID.
 STUDIO_ORDER_ID_SHOPIFY_FETCH_BATCH = 100
+IMPORT_CRON = 'shopify_connector.ir_cron_shopify_import_orders'
+SCHEDULED_CRONS = (IMPORT_CRON, 'shopify_connector.ir_cron_shopify_process_queue')
+SYNC_INTERVALS = {
+    '5m': (5, 'minutes'),
+    '15m': (15, 'minutes'),
+    '30m': (30, 'minutes'),
+    '1h': (1, 'hours'),
+    '2h': (2, 'hours'),
+    '6h': (6, 'hours'),
+    '12h': (12, 'hours'),
+    '1d': (1, 'days'),
+}
 
 
 def _chunked(sequence, size):
@@ -206,6 +218,11 @@ class ShopifyStore(models.Model):
     auto_sync = fields.Boolean(
         string='Scheduled Sync', default=False,
         help="Include this store in the scheduled order import.")
+    sync_interval = fields.Selection(
+        [('5m', '5 minutes'), ('15m', '15 minutes'), ('30m', '30 minutes'), ('1h', '1 hour'),
+         ('2h', '2 hours'), ('6h', '6 hours'), ('12h', '12 hours'), ('1d', '1 day')],
+        string='Sync Every', compute='_compute_sync_interval', inverse='_inverse_sync_interval',
+        help="How often the scheduled import runs. Shared by every Shopify store.")
 
     # -- Customer resolution --------------------------------------------
     match_customer_by_email = fields.Boolean(default=True)
@@ -217,6 +234,13 @@ class ShopifyStore(models.Model):
     customer_tag_ids = fields.Many2many(
         'res.partner.category', string='Tags on New Customers',
         help="Applied to customers this connector creates.")
+    receivable_account_id = fields.Many2one(
+        'account.account', string='Customer Receivable Account',
+        domain="[('account_type', '=', 'asset_receivable'), ('deprecated', '=', False), "
+               "('company_ids', 'parent_of', company_id)]",
+        help="Account Receivable set on the customers this connector creates or owns "
+             "(linked to a Shopify customer). Customers created by hand in Odoo and "
+             "matched by email or phone keep their own. Empty: Odoo's default.")
     guest_partner_id = fields.Many2one(
         'res.partner', string='Fallback Guest Customer',
         help="Used only when a guest order has no email, no phone and no "
@@ -286,6 +310,53 @@ class ShopifyStore(models.Model):
             'Page size must be between 1 and 250 (Shopify\'s maximum).',
         ),
     ]
+
+    # ------------------------------------------------------------------
+    # Schedule (the shared "Shopify: Import Orders" scheduled action)
+    # ------------------------------------------------------------------
+
+    def _import_cron(self):
+        return self.env.ref(IMPORT_CRON, raise_if_not_found=False) or self.env['ir.cron']
+
+    def _compute_sync_interval(self):
+        cron = self.sudo()._import_cron()
+        current = next((key for key, value in SYNC_INTERVALS.items()
+                        if value == (cron.interval_number, cron.interval_type)), False)
+        for store in self:
+            store.sync_interval = current
+
+    def _inverse_sync_interval(self):
+        cron = self.sudo()._import_cron()
+        interval = SYNC_INTERVALS.get(self[:1].sync_interval)
+        if cron and interval:
+            cron.write({'interval_number': interval[0], 'interval_type': interval[1]})
+
+    @api.model
+    def _update_scheduled_crons(self):
+        """Run the scheduled actions exactly when some store has Scheduled Sync on."""
+        active = bool(self.sudo().search_count([('auto_sync', '=', True)]))
+        for xmlid in SCHEDULED_CRONS:
+            cron = self.env.ref(xmlid, raise_if_not_found=False)
+            if cron and cron.sudo().active != active:
+                cron.sudo().active = active
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        stores = super().create(vals_list)
+        if any(vals.get('auto_sync') for vals in vals_list):
+            self._update_scheduled_crons()
+        return stores
+
+    def write(self, vals):
+        result = super().write(vals)
+        if 'auto_sync' in vals or 'active' in vals:
+            self._update_scheduled_crons()
+        return result
+
+    def unlink(self):
+        result = super().unlink()
+        self._update_scheduled_crons()
+        return result
 
     # ------------------------------------------------------------------
     # Compute / constraints

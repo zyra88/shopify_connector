@@ -1,6 +1,6 @@
 {
     'name': 'Shopify Connector',
-    'version': '18.0.1.0.16',
+    'version': '18.0.1.0.18',
     'category': 'Sales/Sales',
     'author': 'M.SHAHIDH',
     'summary': 'Order-first Shopify integration: import orders, resolve customers and products, create sale orders',

@@ -196,3 +196,29 @@ class TestCustomerResolver(ShopifyConnectorCase):
         self.resolver.resolve(self.store, payload)
         partner.invalidate_recordset()
         self.assertEqual(partner.phone, '+44 1234 000000')
+
+    def _receivable(self, code):
+        return self.env['account.account'].create({
+            'name': 'Shopify Clearance %s (test)' % code, 'code': code,
+            'account_type': 'asset_receivable', 'reconcile': True})
+
+    def test_new_customer_gets_store_receivable_account(self):
+        account = self._receivable('100991')
+        self.store.receivable_account_id = account
+        partner = self.resolver.resolve(self.store, self.order_payload())['partner']
+        self.assertEqual(partner.with_company(self.store.company_id).property_account_receivable_id, account)
+
+        # Changed later: the customer's next order moves it.
+        other = self._receivable('100992')
+        self.store.receivable_account_id = other
+        self.resolver.resolve(self.store, self.order_payload())
+        self.assertEqual(partner.with_company(self.store.company_id).property_account_receivable_id, other)
+
+    def test_odoo_customer_matched_by_email_keeps_its_receivable_account(self):
+        existing = self.env['res.partner'].create({'name': 'Ada L.', 'email': 'ada@example.com'})
+        before = existing.with_company(self.store.company_id).property_account_receivable_id
+        self.store.receivable_account_id = self._receivable('100993')
+        payload = self.order_payload()
+        payload['customer']['id'] = None
+        self.assertEqual(self.resolver.resolve(self.store, payload)['partner'], existing)
+        self.assertEqual(existing.with_company(self.store.company_id).property_account_receivable_id, before)
