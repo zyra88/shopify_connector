@@ -13,6 +13,46 @@ class TestIdempotency(ShopifyConnectorCase):
     def _partner_count(self, email='ada@example.com'):
         return self.env['res.partner'].search_count([('email', '=', email)])
 
+    def test_links_manual_sale_order_by_client_order_ref(self):
+        partner = self.env['res.partner'].create({'name': 'Manual Customer'})
+        manual = self.env['sale.order'].create({
+            'partner_id': partner.id,
+            'client_order_ref': '#1001',
+        })
+        record = self.import_payload(self.order_payload())
+        self.assertEqual(record.sale_order_id, manual)
+        self.assertEqual(record.sale_order_id.shopify_order_id, '55000000000001')
+        self.assertEqual(self.env['sale.order'].search_count([
+            ('client_order_ref', '=', '#1001'),
+        ]), 1)
+
+    def test_links_manual_sale_order_by_studio_order_id(self):
+        if 'x_studio_order_id' not in self.env['sale.order']._fields:
+            self.skipTest('Studio Order ID field not installed')
+        partner = self.env['res.partner'].create({'name': 'Studio Customer'})
+        shopify_id = '5599998888777666'
+        self.env['shopify.order'].search([
+            ('store_id', '=', self.store.id),
+            ('shopify_order_id', '=', shopify_id),
+        ]).unlink()
+        self.env['sale.order'].search([
+            ('shopify_order_id', '=', shopify_id),
+        ]).unlink()
+        self.env['sale.order'].search([
+            ('x_studio_order_id', '=', shopify_id),
+        ]).unlink()
+        manual = self.env['sale.order'].create({
+            'partner_id': partner.id,
+            'company_id': self.store.company_id.id,
+            'x_studio_order_id': shopify_id,
+        })
+        record = self.import_payload(self.order_payload(
+            id=shopify_id, name='#STUDIO-LINK-TEST'))
+        self.assertEqual(record.sale_order_id, manual)
+        self.assertEqual(self.env['sale.order'].search_count([
+            ('shopify_order_id', '=', shopify_id),
+        ]), 1)
+
     def test_reimporting_the_same_order_changes_nothing(self):
         payload = self.order_payload()
 

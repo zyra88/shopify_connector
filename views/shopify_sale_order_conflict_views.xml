@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="shopify_sale_order_conflict_view_list" model="ir.ui.view">
+        <field name="name">shopify.sale.order.conflict.list</field>
+        <field name="model">shopify.sale.order.conflict</field>
+        <field name="arch" type="xml">
+            <list string="Order Duplicates" create="false" edit="false"
+                  decoration-muted="state == 'resolved'">
+                <header>
+                    <button name="action_scan_duplicates" type="object"
+                            string="Scan for Duplicates" class="btn-primary"
+                            display="always"/>
+                </header>
+                <field name="state" widget="badge"
+                       decoration-warning="state == 'open'"
+                       decoration-success="state == 'resolved'"/>
+                <field name="store_id" optional="show"/>
+                <field name="display_name" string="Duplicate" optional="hide"/>
+                <field name="shopify_order_name" string="Shopify"/>
+                <field name="shopify_order_id" optional="hide"/>
+                <field name="manual_studio_order_id" string="Manual Order ID"/>
+                <field name="imported_studio_order_id" string="Imported Order ID" optional="show"/>
+                <field name="match_reason" optional="show"/>
+                <field name="manual_order_name" string="Manual SO"/>
+                <field name="manual_state" optional="show"/>
+                <field name="manual_amount_total" optional="hide"/>
+                <field name="imported_order_name" string="Imported SO"/>
+                <field name="imported_state" optional="show"/>
+                <field name="imported_amount_total" optional="hide"/>
+                <button name="action_keep_manual_order" type="object"
+                        string="Keep Manual" class="btn-link"
+                        invisible="state != 'open'"
+                        groups="shopify_connector.group_shopify_manager"
+                        confirm="The imported sale order will be unlinked from Shopify and cancelled if it is still a quotation. The manual order will be linked and refreshed from Shopify. Continue?"/>
+                <button name="action_keep_imported_order" type="object"
+                        string="Keep Imported" class="btn-link"
+                        invisible="state != 'open'"
+                        groups="shopify_connector.group_shopify_manager"
+                        confirm="The manual order will lose its Studio Order ID and be cancelled only if it is still a quotation; confirmed sale orders stay open for you to handle. The imported order stays linked to Shopify. Continue?"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="company_id" column_invisible="True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="shopify_sale_order_conflict_view_form" model="ir.ui.view">
+        <field name="name">shopify.sale.order.conflict.form</field>
+        <field name="model">shopify.sale.order.conflict</field>
+        <field name="arch" type="xml">
+            <form string="Order Duplicate" create="false">
+                <header>
+                    <button name="action_keep_manual_order" type="object"
+                            string="Keep Manual Order"
+                            class="btn-primary"
+                            invisible="state != 'open'"
+                            groups="shopify_connector.group_shopify_manager"
+                            confirm="The imported sale order will be unlinked from Shopify and cancelled if it is still a quotation. The manual order will be linked and refreshed from Shopify. Continue?"/>
+                    <button name="action_keep_imported_order" type="object"
+                            string="Keep Imported Order"
+                            invisible="state != 'open'"
+                            groups="shopify_connector.group_shopify_manager"
+                            confirm="The manual order will lose its Studio Order ID and be cancelled only if it is still a quotation; confirmed sale orders stay open for you to handle. The imported order stays linked to Shopify. Continue?"/>
+                    <field name="state" widget="statusbar" statusbar_visible="open,resolved"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_manual_sale_order" type="object"
+                                class="oe_stat_button" icon="fa-pencil"
+                                invisible="not manual_sale_order_id">
+                            <field name="manual_order_name" widget="statinfo" string="Manual"/>
+                        </button>
+                        <button name="action_open_imported_sale_order" type="object"
+                                class="oe_stat_button" icon="fa-shopping-cart"
+                                invisible="not imported_sale_order_id">
+                            <field name="imported_order_name" widget="statinfo" string="Imported"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="store_id" readonly="1"/>
+                            <field name="shopify_order_name"/>
+                            <field name="shopify_order_id"/>
+                            <field name="match_reason"/>
+                        </group>
+                        <group>
+                            <field name="shopify_mirror_name" readonly="1"/>
+                            <field name="shopify_mirror_id" readonly="1" optional="hide"/>
+                            <field name="manual_partner_id"/>
+                            <field name="imported_partner_id"/>
+                        </group>
+                    </group>
+                    <group string="Compare">
+                        <group string="Manual (your data)">
+                            <field name="manual_sale_order_id" readonly="1"/>
+                            <field name="manual_studio_order_id" string="Order ID (Studio)"/>
+                            <field name="manual_state"/>
+                            <field name="manual_amount_total"/>
+                        </group>
+                        <group string="Imported (connector)">
+                            <field name="imported_sale_order_id" readonly="1"/>
+                            <field name="imported_studio_order_id" string="Order ID (Studio)"/>
+                            <field name="shopify_order_id" string="Shopify order id"/>
+                            <field name="imported_state"/>
+                            <field name="imported_amount_total"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="shopify_sale_order_conflict_view_search" model="ir.ui.view">
+        <field name="name">shopify.sale.order.conflict.search</field>
+        <field name="model">shopify.sale.order.conflict</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="shopify_order_name"/>
+                <field name="shopify_order_id"/>
+                <field name="manual_order_name"/>
+                <field name="imported_order_name"/>
+                <field name="manual_studio_order_id"/>
+                <field name="imported_studio_order_id"/>
+                <filter name="open" string="Open" domain="[('state', '=', 'open')]"/>
+                <filter name="resolved" string="Resolved" domain="[('state', '=', 'resolved')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_shopify_sale_order_conflict" model="ir.actions.act_window">
+        <field name="name">Order Duplicates</field>
+        <field name="res_model">shopify.sale.order.conflict</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_open': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Scan to find manual and imported sale orders for the same Shopify order.
+            </p>
+            <p>
+                <strong>Scan for Duplicates</strong> compares <em>Shopify Orders</em> with
+                <em>Order ID</em> on the manual sale order must match the Shopify order
+                (numeric id or <code>TR-001242-…</code> when the Shopify order is <code>TR-001242</code>).
+            </p>
+            <p>
+                If nothing appears, check that manual orders use that Order ID format and that a
+                second sale order was created by the Shopify import for the same order.
+            </p>
+        </field>
+    </record>
+
+</odoo>

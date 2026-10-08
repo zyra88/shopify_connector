@@ -69,6 +69,105 @@ class TestOrderImport(ShopifyConnectorCase):
                 {'x_studio_order_from_1': 'Website'},
             )
 
+    def test_get_studio_order_id_sale_order_values(self):
+        store_model = type(self.env['shopify.store'])
+        self.store.studio_order_id_mode = 'numeric'
+        with patch.object(
+            store_model,
+            '_sale_order_studio_order_id_field_name',
+            return_value='x_studio_order_id',
+        ):
+            self.assertEqual(
+                self.store.get_studio_order_id_sale_order_values('55000000000001'),
+                {'x_studio_order_id': '55000000000001'},
+            )
+
+    def test_studio_order_id_name_and_tracking(self):
+        if 'x_studio_order_id' not in self.env['sale.order']._fields:
+            self.skipTest('Studio Order ID field not installed')
+        self.store.studio_order_id_mode = 'name_and_tracking'
+        payload = {
+            'name': 'TR-001270',
+            'primary_tracking_number': 'LUAC0001601959',
+        }
+        self.assertEqual(
+            self.store.get_studio_order_id_sale_order_values(
+                '18906998603930', payload=payload),
+            {'x_studio_order_id': 'TR-001270-LUAC0001601959'},
+        )
+
+    def test_studio_order_id_upgrade_when_tracking_arrives(self):
+        if 'x_studio_order_id' not in self.env['sale.order']._fields:
+            self.skipTest('Studio Order ID field not installed')
+        self.store.studio_order_id_mode = 'name_and_tracking'
+        payload = {
+            'name': 'TR-001270',
+            'primary_tracking_number': 'LUAC0001601959',
+        }
+        self.assertEqual(
+            self.store.get_studio_order_id_upgrade_values(
+                '18906998603930', payload, 'TR-001270'),
+            {'x_studio_order_id': 'TR-001270-LUAC0001601959'},
+        )
+        self.assertEqual(
+            self.store.get_studio_order_id_upgrade_values(
+                '18906998603930', payload, 'TR-001270-LUAC0001601959'),
+            {},
+        )
+        self.assertEqual(
+            self.store.get_studio_order_id_upgrade_values(
+                '18906998603930', payload, False),
+            {'x_studio_order_id': 'TR-001270-LUAC0001601959'},
+        )
+
+    def test_studio_order_id_force_refresh_overwrites_wrong_id(self):
+        if 'x_studio_order_id' not in self.env['sale.order']._fields:
+            self.skipTest('Studio Order ID field not installed')
+        self.store.studio_order_id_mode = 'name_and_tracking'
+        payload = {
+            'name': 'TR-001270',
+            'primary_tracking_number': 'LUAC0001601959',
+        }
+        self.assertEqual(
+            self.store.get_studio_order_id_refresh_values(
+                '18906998603930', payload, '18906998603930', force=True),
+            {'x_studio_order_id': 'TR-001270-LUAC0001601959'},
+        )
+        self.assertEqual(
+            self.store.get_studio_order_id_refresh_values(
+                '18906998603930', payload, 'TR-001270-LUAC0001601959', force=True),
+            {},
+        )
+
+    def test_prepare_sale_order_merges_studio_order_id(self):
+        record = self.import_payload(self.order_payload(shopify_id='55000000000099'))
+        importer = self.env['shopify.order.importer']
+        with patch.object(
+            type(self.store),
+            'get_studio_order_id_sale_order_values',
+            return_value={'x_studio_order_id': '55000000000099'},
+        ):
+            values = importer._prepare_sale_order_values(
+                self.store,
+                record,
+                self.order_payload(shopify_id='55000000000099'),
+                {
+                    'partner': record.partner_id,
+                    'partner_invoice': record.partner_invoice_id,
+                    'partner_shipping': record.partner_shipping_id,
+                },
+            )
+        self.assertEqual(values.get('x_studio_order_id'), '55000000000099')
+
+    def test_get_type_of_order_sale_order_values(self):
+        if 'x_studio_type_of_order' not in self.env['sale.order']._fields:
+            self.skipTest('Studio Type of Order field not installed')
+        self.store.type_of_order = 'Website'
+        self.assertEqual(
+            self.store.get_type_of_order_sale_order_values(),
+            {'x_studio_type_of_order': 'Website'},
+        )
+
     def test_prepare_sale_order_merges_order_from(self):
         record = self.import_payload(self.order_payload(shopify_id='55000000000098'))
         importer = self.env['shopify.order.importer']

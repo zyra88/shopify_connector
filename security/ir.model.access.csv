@@ -19,3 +19,5 @@ access_shopify_sync_log_user,shopify.sync.log.user,model_shopify_sync_log,shopif
 access_shopify_sync_log_manager,shopify.sync.log.manager,model_shopify_sync_log,shopify_connector.group_shopify_manager,1,1,1,1
 access_shopify_import_orders_wizard,shopify.import.orders.wizard,model_shopify_import_orders_wizard,shopify_connector.group_shopify_user,1,1,1,1
 access_shopify_fetch_catalog_wizard,shopify.fetch.catalog.wizard,model_shopify_fetch_catalog_wizard,shopify_connector.group_shopify_user,1,1,1,1
+access_shopify_sale_order_conflict_user,shopify.sale.order.conflict.user,model_shopify_sale_order_conflict,shopify_connector.group_shopify_user,1,0,0,0
+access_shopify_sale_order_conflict_manager,shopify.sale.order.conflict.manager,model_shopify_sale_order_conflict,shopify_connector.group_shopify_manager,1,1,1,1

@@ -43,6 +43,15 @@
                             string="Advanced Import" icon="fa-sliders"
                             context="{'default_store_id': id}"
                             invisible="connection_state != 'connected'"/>
+                    <button name="action_scan_order_duplicates" type="object"
+                            string="Find Order Duplicates" icon="fa-clone"
+                            invisible="connection_state != 'connected'"/>
+                    <field name="show_fill_studio_order_id_button" invisible="1"/>
+                    <button name="action_backfill_studio_order_ids" type="object"
+                            string="Resync Order IDs from Shopify" icon="fa-tag"
+                            invisible="connection_state != 'connected' or not show_fill_studio_order_id_button"
+                            groups="shopify_connector.group_shopify_manager"
+                            confirm="Re-fetch imported orders missing Studio Order ID from Shopify and fill Order ID (order name + tracking when available)?"/>
                     <field name="connection_state" widget="statusbar"
                            statusbar_visible="draft,connected"/>
                 </header>
@@ -128,6 +137,9 @@
                                     <field name="order_from_available" invisible="1"/>
                                     <field name="order_from"
                                            invisible="not order_from_available"/>
+                                    <field name="type_of_order_available" invisible="1"/>
+                                    <field name="type_of_order"
+                                           invisible="not type_of_order_available"/>
                                     <field name="use_custom_sale_order_prefix"/>
                                     <field name="sale_order_prefix"
                                            invisible="not use_custom_sale_order_prefix"
@@ -135,7 +147,9 @@
                                 </group>
                             </group>
                             <group string="Behaviour">
+                                <field name="studio_order_id_mode"/>
                                 <field name="auto_confirm_order"/>
+                                <field name="link_existing_sale_orders"/>
                                 <field name="import_order_note"/>
                                 <field name="warehouse_on_order"/>
                                 <field name="amount_tolerance"/>

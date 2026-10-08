@@ -96,6 +96,14 @@ GRAPHQL_ORDER = {
         'gateway': 'shopify_payments', 'kind': 'SALE', 'status': 'SUCCESS',
         'amountSet': {'shopMoney': {'amount': '185.00', 'currencyCode': 'GBP'}},
     }],
+    'fulfillments': [{
+        'status': 'SUCCESS',
+        'trackingInfo': [{
+            'company': 'Ekart',
+            'number': 'LUAC0001601959',
+            'url': 'https://example.com/track',
+        }],
+    }],
 }
 
 
@@ -144,6 +152,7 @@ class TestShopifyClient(TransactionCase):
         self.assertEqual(order['customer']['tags'], 'vip')
         self.assertEqual(order['billing_address']['country_code'], 'GB')
         self.assertEqual(order['shipping_address'], {})
+        self.assertEqual(order['primary_tracking_number'], 'LUAC0001601959')
 
         line = order['line_items'][0]
         self.assertEqual(line['id'], '11000000000001')

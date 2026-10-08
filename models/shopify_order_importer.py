@@ -59,6 +59,21 @@ class ShopifyOrderImporter(models.AbstractModel):
         if queue:
             queue.shopify_order_ref_id = record.id
 
+        if not record.sale_order_id:
+            existing_order = self._find_existing_sale_order(store, record)
+            if existing_order:
+                record.write({'sale_order_id': existing_order.id})
+                self.env['shopify.sync.log'].log(
+                    store, 'info', 'order_import',
+                    _("Linked Shopify order %(shopify)s to existing sale order %(sale)s.",
+                      shopify=record.shopify_order_name or record.shopify_order_id,
+                      sale=existing_order.name),
+                    shopify_reference=record.shopify_order_name,
+                    shopify_order_id=record.shopify_order_id,
+                    shopify_order_ref_id=record.id,
+                    sale_order_id=existing_order.id,
+                )
+
         result = {
             'shopify_order_id': record.id,
             'sale_order_id': record.sale_order_id.id or False,
@@ -252,6 +267,78 @@ class ShopifyOrderImporter(models.AbstractModel):
     # ------------------------------------------------------------------
 
     @api.model
+    def _find_existing_sale_order(self, store, record):
+        """Reuse a manually created sale order that already represents this Shopify order."""
+        SaleOrder = self.env['sale.order']
+        company_domain = [('company_id', '=', store.company_id.id)]
+
+        linked = SaleOrder.search(company_domain + [
+            ('shopify_store_id', '=', store.id),
+            ('shopify_order_id', '=', record.shopify_order_id),
+        ], limit=2)
+        if len(linked) == 1:
+            return linked
+        if len(linked) > 1:
+            _logger.warning(
+                "Shopify: multiple sale orders already linked to order id %s on store %s",
+                record.shopify_order_id, store.display_name,
+            )
+            return linked[0]
+
+        if not store.link_existing_sale_orders:
+            return SaleOrder
+
+        blocked_ids = self.env['shopify.order'].search([
+            ('store_id', '=', store.id),
+            ('shopify_order_id', '!=', record.shopify_order_id),
+            ('sale_order_id', '!=', False),
+        ]).mapped('sale_order_id').ids
+
+        def _single_match(extra_domain):
+            domain = company_domain + extra_domain
+            if blocked_ids:
+                domain.append(('id', 'not in', blocked_ids))
+            candidates = SaleOrder.search(domain, order='id asc')
+            if len(candidates) == 1:
+                return candidates
+            if len(candidates) > 1:
+                preferred = candidates.filtered(lambda order: not order.shopify_order_id)
+                if preferred:
+                    return preferred[:1]
+                _logger.warning(
+                    "Shopify: multiple sale orders match %s for order %s; skipping auto-link.",
+                    extra_domain, record.shopify_order_id,
+                )
+            return SaleOrder
+
+        studio_field = store._sale_order_studio_order_id_field_name()
+        if studio_field:
+            studio_value = record.shopify_order_id
+            order = _single_match([
+                (studio_field, '=', studio_value),
+                ('shopify_order_id', '=', False),
+            ])
+            if order:
+                return order
+            if studio_value.isdigit():
+                order = _single_match([
+                    (studio_field, '=', int(studio_value)),
+                    ('shopify_order_id', '=', False),
+                ])
+                if order:
+                    return order
+
+        if record.shopify_order_name:
+            order = _single_match([
+                ('client_order_ref', '=', record.shopify_order_name),
+                ('shopify_order_id', '=', False),
+            ])
+            if order:
+                return order
+
+        return SaleOrder
+
+    @api.model
     def _create_or_update_sale_order(self, store, record, payload, customer, resolved_lines):
         sale_order = record.sale_order_id
         values = self._prepare_sale_order_values(store, record, payload, customer)
@@ -323,6 +410,9 @@ class ShopifyOrderImporter(models.AbstractModel):
                 record.shopify_order_name or record.shopify_order_id,
             )
         values.update(store.get_order_from_sale_order_values())
+        values.update(store.get_type_of_order_sale_order_values())
+        values.update(store.get_studio_order_id_sale_order_values(
+            record.shopify_order_id, payload=payload))
         return values
 
     @api.model
@@ -530,11 +620,16 @@ class ShopifyOrderImporter(models.AbstractModel):
     @api.model
     def _refresh_confirmed_order(self, store, record, payload, result):
         sale_order = record.sale_order_id
-        sale_order.write({
+        values = {
             'shopify_financial_status': payload.get('financial_status'),
             'shopify_fulfillment_status': payload.get('fulfillment_status') or 'unfulfilled',
             'shopify_updated_at': record.shopify_updated_at,
-        })
+        }
+        field_name = store._sale_order_studio_order_id_field_name()
+        if field_name:
+            values.update(store.get_studio_order_id_upgrade_values(
+                record.shopify_order_id, payload, sale_order[field_name]))
+        sale_order.write(values)
         message = _(
             "Sale order %(sale)s is already %(state)s; only the Shopify status "
             "fields were refreshed.", sale=sale_order.name, state=sale_order.state)

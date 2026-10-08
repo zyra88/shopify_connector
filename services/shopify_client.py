@@ -712,6 +712,7 @@ class ShopifyClient:
         if raw.get('gateway') and raw['gateway'] not in gateways:
             gateways = [raw['gateway']] + list(gateways)
 
+        tracking_numbers = self._tracking_numbers_from_rest(raw)
         return {
             'id': str(raw.get('id') or ''),
             'admin_graphql_api_id': raw.get('admin_graphql_api_id'),
@@ -768,8 +769,32 @@ class ShopifyClient:
                 }
                 for t in raw.get('transactions') or []
             ],
+            'tracking_numbers': tracking_numbers,
+            'primary_tracking_number': tracking_numbers[0] if tracking_numbers else False,
             'raw': raw,
         }
+
+    @staticmethod
+    def _tracking_numbers_from_rest(raw):
+        numbers = []
+        for fulfillment in raw.get('fulfillments') or []:
+            number = (fulfillment.get('tracking_number') or '').strip()
+            if number:
+                numbers.append(number)
+        return numbers
+
+    @staticmethod
+    def _tracking_numbers_from_graphql(node):
+        numbers = []
+        for fulfillment in node.get('fulfillments') or []:
+            tracking_info = fulfillment.get('trackingInfo') or []
+            if isinstance(tracking_info, dict):
+                tracking_info = [tracking_info]
+            for info in tracking_info:
+                number = (info.get('number') or '').strip()
+                if number:
+                    numbers.append(number)
+        return numbers
 
     @staticmethod
     def _normalise_graphql_address(raw):
@@ -838,6 +863,7 @@ class ShopifyClient:
         if fulfillment == 'unfulfilled':
             fulfillment = None
 
+        tracking_numbers = self._tracking_numbers_from_graphql(node)
         return {
             'id': parse_gid(node.get('id')) or parse_gid(node.get('legacyResourceId')),
             'admin_graphql_api_id': node.get('id'),
@@ -891,6 +917,8 @@ class ShopifyClient:
                 }
                 for t in node.get('transactions') or []
             ],
+            'tracking_numbers': tracking_numbers,
+            'primary_tracking_number': tracking_numbers[0] if tracking_numbers else False,
             'raw': node,
         }
 
@@ -1008,6 +1036,14 @@ fragment OrderFields on Order {
     kind
     status
     amountSet { ...MoneyBagFields }
+  }
+  fulfillments(first: 20) {
+    status
+    trackingInfo {
+      company
+      number
+      url
+    }
   }
 }
 """

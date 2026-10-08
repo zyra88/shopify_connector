@@ -1,3 +1,4 @@
+import json
 import logging
 
 from odoo import _, api, fields, models
@@ -14,6 +15,14 @@ _logger = logging.getLogger(__name__)
 
 # Refresh Dev Dashboard tokens before Shopify's 24-hour expiry.
 TOKEN_REFRESH_MARGIN_SECONDS = 300
+# Shopify REST ``ids`` filter batch size when re-fetching orders for Studio Order ID.
+STUDIO_ORDER_ID_SHOPIFY_FETCH_BATCH = 100
+
+
+def _chunked(sequence, size):
+    sequence = list(sequence)
+    for index in range(0, len(sequence), size):
+        yield sequence[index:index + size]
 
 
 class ShopifyStore(models.Model):
@@ -118,12 +127,40 @@ class ShopifyStore(models.Model):
     order_from = fields.Selection(
         selection='_get_order_from_selection',
         string='Order From',
-        help="Written on every imported sale order. Options come from your "
-             "Order From field on Quotations (e.g. Website, Amazon).")
+        default=lambda self: self._default_studio_selection('Website', 'order_from'),
+        help="Written on every imported sale order (e.g. x_studio_order_from_1).")
+    type_of_order_available = fields.Boolean(
+        compute='_compute_type_of_order_available',
+        help="Technical: True when sale.order has a Type of Order Studio field.")
+    type_of_order = fields.Selection(
+        selection='_get_type_of_order_selection',
+        string='Type of Order',
+        default=lambda self: self._default_studio_selection('Website', 'type_of_order'),
+        help="Written on every imported sale order (e.g. x_studio_type_of_order).")
     auto_confirm_order = fields.Boolean(
         string='Auto-Confirm Sale Orders',
         help="Confirm imported orders automatically. Leave off until product "
              "mapping is proven, otherwise mistakes reserve stock.")
+    link_existing_sale_orders = fields.Boolean(
+        string='Link Existing Sale Orders',
+        default=True,
+        help="When enabled, import reuses an existing quotation or sale order "
+             "that already carries the same Studio Order ID, client reference "
+             "(#1001), or Shopify order id instead of creating a duplicate.")
+    studio_order_id_mode = fields.Selection(
+        [
+            ('numeric', 'Numeric Shopify order ID'),
+            ('order_name', 'Shopify order name (TR-001270)'),
+            (
+                'name_and_tracking',
+                'Order name and Ekart tracking (TR-001270-LUAC0001601959)',
+            ),
+        ],
+        string='Studio Order ID Format',
+        default='name_and_tracking',
+        required=True,
+        help="Written into the Studio Order ID field on imported sale orders. "
+             "Tracking comes from Shopify fulfillments (e.g. Ekart LUAC… numbers).")
     import_order_note = fields.Boolean(string='Import Order Note', default=True)
     warehouse_on_order = fields.Boolean(
         string='Force Warehouse', default=True,
@@ -472,6 +509,148 @@ class ShopifyStore(models.Model):
         self.sudo().write({'last_product_sync_date': run_started_at})
         return stats
 
+    def action_scan_order_duplicates(self):
+        """Open the duplicate-order screen after scanning this store."""
+        self.ensure_one()
+        return self.env['shopify.sale.order.conflict'].with_context(
+            default_store_id=self.id,
+            active_model='shopify.store',
+            active_id=self.id,
+        ).action_scan_duplicates()
+
+    show_fill_studio_order_id_button = fields.Boolean(
+        compute='_compute_show_fill_studio_order_id_button',
+        string='Show Fill Order ID Button',
+    )
+    linked_orders_missing_studio_order_id_count = fields.Integer(
+        compute='_compute_show_fill_studio_order_id_button',
+        string='Linked Orders Missing Order ID',
+    )
+
+    @api.depends()
+    def _compute_show_fill_studio_order_id_button(self):
+        for store in self:
+            count = store._count_imported_orders_missing_studio_order_id()
+            store.linked_orders_missing_studio_order_id_count = count
+            store.show_fill_studio_order_id_button = bool(count)
+
+    def _count_imported_orders_missing_studio_order_id(self):
+        """Imported (Shopify-linked) sale orders with an empty Studio Order ID."""
+        self.ensure_one()
+        field_name = self._sale_order_studio_order_id_field_name()
+        if not field_name:
+            return 0
+        return self.env['sale.order'].search_count([
+            ('company_id', '=', self.company_id.id),
+            ('shopify_store_id', '=', self.id),
+            ('shopify_order_id', '!=', False),
+            (field_name, '=', False),
+        ])
+
+    @api.model
+    def _count_linked_orders_missing_studio_order_id(self, store_ids=None):
+        Store = self.env['shopify.store']
+        if store_ids:
+            stores = Store.browse(list(store_ids))
+        else:
+            stores = Store.search([('company_id', 'in', self.env.companies.ids)])
+        return sum(store._count_imported_orders_missing_studio_order_id() for store in stores)
+
+    def action_backfill_studio_order_ids(self):
+        """Re-fetch from Shopify and fill Studio Order ID on imported orders missing it."""
+        self.ensure_one()
+        count = self._sync_studio_order_ids_on_linked_orders(
+            refresh_from_shopify=True,
+            force_rewrite=True,
+            only_missing_studio_order_id=True,
+        )
+        return self._notify(
+            _("%(count)s sale order(s) updated with Studio Order ID from Shopify.",
+              count=count),
+        )
+
+    def _backfill_studio_order_id_field(self):
+        """Fill or upgrade Studio Order ID using stored mirror payloads only."""
+        self.ensure_one()
+        return self._sync_studio_order_ids_on_linked_orders(
+            refresh_from_shopify=False, force_rewrite=False)
+
+    def _sync_studio_order_ids_on_linked_orders(
+            self, refresh_from_shopify=True, force_rewrite=False,
+            only_missing_studio_order_id=False):
+        """Return how many ``sale.order`` Studio Order ID values were written."""
+        self.ensure_one()
+        field_name = self._sale_order_studio_order_id_field_name()
+        if not field_name:
+            return 0
+        domain = [
+            ('company_id', '=', self.company_id.id),
+            ('shopify_store_id', '=', self.id),
+            ('shopify_order_id', '!=', False),
+        ]
+        if only_missing_studio_order_id:
+            domain.append((field_name, '=', False))
+        orders = self.env['sale.order'].search(domain)
+        if not orders:
+            return 0
+
+        shopify_ids = list({order.shopify_order_id for order in orders})
+        payloads = self._fetch_shopify_order_payloads(shopify_ids, refresh_from_shopify)
+
+        updated = 0
+        for order in orders:
+            payload = payloads.get(order.shopify_order_id) or {}
+            values = self.get_studio_order_id_refresh_values(
+                order.shopify_order_id, payload, order[field_name],
+                force=force_rewrite)
+            if values:
+                order.write(values)
+                updated += 1
+        return updated
+
+    def _fetch_shopify_order_payloads(self, shopify_order_ids, refresh_from_shopify):
+        """Map Shopify order id → normalised payload (mirror updated when refreshing)."""
+        self.ensure_one()
+        payloads = {}
+        if not shopify_order_ids:
+            return payloads
+        if refresh_from_shopify:
+            client = self.get_client()
+            importer = self.env['shopify.order.importer']
+            for batch in _chunked(shopify_order_ids, STUDIO_ORDER_ID_SHOPIFY_FETCH_BATCH):
+                for payload in client.iter_orders(
+                        shopify_order_ids=batch, status='any', page_size=len(batch)):
+                    shopify_id = str(payload.get('id') or '')
+                    if not shopify_id:
+                        continue
+                    payloads[shopify_id] = payload
+                    importer._upsert_shopify_order(self, payload)
+            for shopify_id in shopify_order_ids:
+                if shopify_id in payloads:
+                    continue
+                payload = client.get_order(shopify_id)
+                if payload:
+                    payloads[shopify_id] = payload
+                    importer._upsert_shopify_order(self, payload)
+        else:
+            for shopify_id in shopify_order_ids:
+                payloads[shopify_id] = self._order_payload_for_studio_order_id(shopify_id)
+        return payloads
+
+    def _order_payload_for_studio_order_id(self, shopify_order_id):
+        """Return the normalised payload stored on the Shopify order mirror."""
+        self.ensure_one()
+        mirror = self.env['shopify.order'].search([
+            ('store_id', '=', self.id),
+            ('shopify_order_id', '=', shopify_order_id),
+        ], limit=1)
+        if not mirror or not mirror.payload:
+            return {}
+        try:
+            return json.loads(mirror.payload)
+        except ValueError:
+            return {}
+
     def action_import_orders(self):
         """Fetch, queue and process orders for every selected store."""
         totals = {'fetched': 0, 'done': 0, 'needs_review': 0, 'failed': 0}
@@ -611,6 +790,153 @@ class ShopifyStore(models.Model):
         if field_name:
             return {field_name: self.order_from}
         return {}
+
+    @api.model
+    def _sale_order_type_of_order_field_names(self):
+        return ('x_studio_type_of_order',)
+
+    @api.model
+    def _sale_order_type_of_order_field_name(self):
+        SaleOrder = self.env['sale.order']
+        for field_name in self._sale_order_type_of_order_field_names():
+            field = SaleOrder._fields.get(field_name)
+            if field and field.type == 'selection':
+                return field_name
+        return False
+
+    @api.model
+    def _get_type_of_order_selection(self):
+        SaleOrder = self.env['sale.order']
+        field_name = self._sale_order_type_of_order_field_name()
+        if not field_name:
+            return []
+        field = SaleOrder._fields[field_name]
+        selection = field.selection
+        if callable(selection):
+            selection = selection(SaleOrder)
+        return list(selection or [])
+
+    @api.depends()
+    def _compute_type_of_order_available(self):
+        available = bool(self._sale_order_type_of_order_field_name())
+        for store in self:
+            store.type_of_order_available = available
+
+    def get_type_of_order_sale_order_values(self):
+        self.ensure_one()
+        if not self.type_of_order:
+            return {}
+        field_name = self._sale_order_type_of_order_field_name()
+        if field_name:
+            return {field_name: self.type_of_order}
+        return {}
+
+    @api.model
+    def _default_studio_selection(self, preferred_key, kind):
+        """Pick ``preferred_key`` when it exists on the related Studio selection field."""
+        if kind == 'order_from':
+            selection = self._get_order_from_selection()
+        elif kind == 'type_of_order':
+            selection = self._get_type_of_order_selection()
+        else:
+            return False
+        keys = [key for key, _label in selection]
+        if preferred_key in keys:
+            return preferred_key
+        return False
+
+    @api.model
+    def _sale_order_studio_order_id_field_names(self):
+        return ('x_studio_order_id',)
+
+    @api.model
+    def _sale_order_studio_order_id_field_name(self):
+        """Return the technical name of the Studio Order ID field, if installed."""
+        SaleOrder = self.env['sale.order']
+        for field_name in self._sale_order_studio_order_id_field_names():
+            field = SaleOrder._fields.get(field_name)
+            if field and field.type in ('char', 'text'):
+                return field_name
+        return False
+
+    def get_studio_order_id_sale_order_values(self, shopify_order_id, payload=None):
+        """Values for the Studio Order ID field on ``sale.order``."""
+        self.ensure_one()
+        field_name = self._sale_order_studio_order_id_field_name()
+        if not field_name:
+            return {}
+        value = self._format_studio_order_id(shopify_order_id, payload or {})
+        if value:
+            return {field_name: value}
+        return {}
+
+    def get_studio_order_id_refresh_values(
+            self, shopify_order_id, payload, current_value, force=False):
+        """Write values when empty, upgraded, or ``force`` and Shopify id differs."""
+        self.ensure_one()
+        new_values = self.get_studio_order_id_sale_order_values(
+            shopify_order_id, payload=payload)
+        if not new_values:
+            return {}
+        if force:
+            field_name = next(iter(new_values))
+            if (current_value or '').strip() != new_values[field_name]:
+                return new_values
+            return {}
+        return self.get_studio_order_id_upgrade_values(
+            shopify_order_id, payload, current_value)
+
+    def get_studio_order_id_upgrade_values(self, shopify_order_id, payload, current_value):
+        """Refresh Studio Order ID when tracking arrives (e.g. ``TR-001270`` → full id)."""
+        self.ensure_one()
+        field_name = self._sale_order_studio_order_id_field_name()
+        if not field_name:
+            return {}
+        new_values = self.get_studio_order_id_sale_order_values(
+            shopify_order_id, payload=payload)
+        if not new_values:
+            return {}
+        new_value = new_values.get(field_name)
+        if self._should_upgrade_studio_order_id(current_value, new_value, payload or {}):
+            return new_values
+        return {}
+
+    def _should_upgrade_studio_order_id(self, current_value, new_value, payload):
+        """Allow filling empty ids or appending tracking to an order-name-only id."""
+        current = (current_value or '').strip()
+        new_value = (new_value or '').strip()
+        if not new_value or new_value == current:
+            return False
+        if not current:
+            return True
+        if (self.studio_order_id_mode or 'numeric') != 'name_and_tracking':
+            return False
+        if new_value.startswith('%s-' % current):
+            return True
+        name = (payload.get('name') or '').strip()
+        return bool(name and current == name and new_value.startswith('%s-' % name))
+
+    def _format_studio_order_id(self, shopify_order_id, payload):
+        """Build ``TR-001270-LUAC0001601959`` from order name + fulfillment tracking."""
+        self.ensure_one()
+        mode = self.studio_order_id_mode or 'numeric'
+        name = (payload.get('name') or '').strip()
+        tracking = (payload.get('primary_tracking_number') or '').strip()
+        if not tracking:
+            numbers = payload.get('tracking_numbers') or []
+            tracking = (numbers[0] if numbers else '') or ''
+            tracking = str(tracking).strip()
+
+        if mode == 'order_name' and name:
+            return name
+        if mode == 'name_and_tracking':
+            if name and tracking:
+                return '%s-%s' % (name, tracking)
+            if name:
+                return name
+        if shopify_order_id:
+            return str(shopify_order_id)
+        return False
 
     # ------------------------------------------------------------------
     # Default products

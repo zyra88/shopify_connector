@@ -25,6 +25,12 @@
               action="action_shopify_order_needs_review"
               sequence="20"/>
 
+    <menuitem id="menu_shopify_order_duplicates"
+              name="Order Duplicates"
+              parent="menu_shopify_orders_root"
+              action="action_shopify_sale_order_conflict"
+              sequence="25"/>
+
     <menuitem id="menu_shopify_import_wizard"
               name="Import Orders"
               parent="menu_shopify_orders_root"

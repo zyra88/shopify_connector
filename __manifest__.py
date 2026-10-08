@@ -1,6 +1,6 @@
 {
     'name': 'Shopify Connector',
-    'version': '18.0.1.0.1',
+    'version': '18.0.1.0.16',
     'category': 'Sales/Sales',
     'author': 'M.SHAHIDH',
     'summary': 'Order-first Shopify integration: import orders, resolve customers and products, create sale orders',
@@ -47,6 +47,7 @@ Features
         'data/ir_cron_data.xml',
         'wizards/shopify_import_orders_wizard_views.xml',
         'wizards/shopify_fetch_catalog_wizard_views.xml',
+        'views/shopify_sale_order_conflict_views.xml',
         'views/shopify_sync_log_views.xml',
         'views/shopify_sync_queue_views.xml',
         'views/shopify_customer_mapping_views.xml',
