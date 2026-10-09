@@ -121,6 +121,7 @@ class ShopifyOrderImporter(models.AbstractModel):
 
         if store.auto_confirm_order and not review_reason and sale_order.state == 'draft':
             sale_order.action_confirm()
+            review_reason = self._create_invoice(store, sale_order)
 
         record.write({
             'state': 'needs_review' if review_reason else 'imported',
@@ -413,6 +414,7 @@ class ShopifyOrderImporter(models.AbstractModel):
         values.update(store.get_type_of_order_sale_order_values())
         values.update(store.get_studio_order_id_sale_order_values(
             record.shopify_order_id, payload=payload))
+        values.update(store.custom_field_ids.get_sale_order_values(payload))
         return values
 
     @api.model
@@ -616,6 +618,26 @@ class ShopifyOrderImporter(models.AbstractModel):
             shopify_order_ref_id=record.id)
         result.update({'state': 'cancelled', 'message': message})
         return result
+
+    @api.model
+    def _create_invoice(self, store, sale_order):
+        """Invoice a sale order the connector has just confirmed.
+
+        Returns a review reason when Odoo refuses, so the order is kept but
+        flagged instead of failing the whole import.
+        """
+        if store.invoice_mode == 'none' or sale_order.invoice_status != 'to invoice':
+            return False
+        try:
+            with self.env.cr.savepoint():
+                invoices = sale_order.with_company(sale_order.company_id)._create_invoices()
+                if store.invoice_mode == 'posted':
+                    invoices.action_post()
+        except Exception as exc:  # noqa: BLE001 - the order itself is fine
+            _logger.warning("Shopify: invoice for %s failed: %s", sale_order.name, exc)
+            return _("Sale order %(sale)s was confirmed, but its invoice could not be created: %(error)s",
+                     sale=sale_order.name, error=exc)
+        return False
 
     @api.model
     def _refresh_confirmed_order(self, store, record, payload, result):

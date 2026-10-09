@@ -10,3 +10,5 @@ from . import test_product_sync
 from . import test_product_catalog
 from . import test_order_conflict
 from . import test_schedule
+from . import test_order_status
+from . import test_custom_fields

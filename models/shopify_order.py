@@ -26,6 +26,14 @@ def format_address(address):
     return '\n'.join(line for line in lines if line)
 
 
+# Shopify REST and GraphQL spell fulfillment statuses differently.
+FULFILLMENT_ALIASES = {
+    'partially_fulfilled': 'partial',
+    'pending_fulfillment': 'in_progress',
+    'scheduled': 'in_progress',
+    'open': 'unfulfilled',
+}
+
 class ShopifyOrder(models.Model):
     """Mirror of a Shopify order and the audit trail of its import.
 
@@ -70,6 +78,20 @@ class ShopifyOrder(models.Model):
     currency_id = fields.Many2one('res.currency', readonly=True)
     financial_status = fields.Char(readonly=True)
     fulfillment_status = fields.Char(readonly=True)
+    shopify_stage = fields.Selection(
+        [
+            ('unfulfilled', 'Unfulfilled'),
+            ('in_progress', 'In Progress'),
+            ('on_hold', 'On Hold'),
+            ('partial', 'Partially Fulfilled'),
+            ('fulfilled', 'Fulfilled'),
+            ('restocked', 'Restocked'),
+            ('cancelled', 'Cancelled'),
+        ],
+        string='Shopify Status', compute='_compute_shopify_status', store=True,
+        help="Fulfillment status on Shopify, or Cancelled.")
+    payment_status_label = fields.Char(
+        string='Payment', compute='_compute_shopify_status', store=True)
     payment_gateway = fields.Char(string='Payment Method', readonly=True)
     note = fields.Text(readonly=True)
     tags = fields.Char(readonly=True)
@@ -124,6 +146,18 @@ class ShopifyOrder(models.Model):
             'This Shopify order is already recorded for this store.',
         ),
     ]
+
+    @api.depends('fulfillment_status', 'shopify_cancelled_at', 'financial_status')
+    def _compute_shopify_status(self):
+        stages = dict(self._fields['shopify_stage'].selection)
+        for order in self:
+            if order.shopify_cancelled_at:
+                stage = 'cancelled'
+            else:
+                stage = (order.fulfillment_status or 'unfulfilled').lower()
+                stage = FULFILLMENT_ALIASES.get(stage, stage)
+            order.shopify_stage = stage if stage in stages else False
+            order.payment_status_label = (order.financial_status or '').replace('_', ' ').title()
 
     @api.depends('shopify_total', 'sale_order_id.amount_total', 'store_id.amount_tolerance')
     def _compute_reconciliation(self):

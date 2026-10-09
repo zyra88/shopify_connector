@@ -134,26 +134,76 @@
                                 <group>
                                     <field name="team_id" options="{'no_create': True}"/>
                                     <field name="user_id" options="{'no_create': True}"/>
-                                    <field name="order_from_available" invisible="1"/>
-                                    <field name="order_from"
-                                           invisible="not order_from_available"/>
-                                    <field name="type_of_order_available" invisible="1"/>
-                                    <field name="type_of_order"
-                                           invisible="not type_of_order_available"/>
                                     <field name="use_custom_sale_order_prefix"/>
                                     <field name="sale_order_prefix"
                                            invisible="not use_custom_sale_order_prefix"
                                            required="use_custom_sale_order_prefix"/>
                                 </group>
                             </group>
-                            <group string="Behaviour">
-                                <field name="studio_order_id_mode"/>
-                                <field name="auto_confirm_order"/>
-                                <field name="link_existing_sale_orders"/>
-                                <field name="import_order_note"/>
-                                <field name="warehouse_on_order"/>
-                                <field name="amount_tolerance"/>
+                            <group>
+                                <group string="Sale Order">
+                                    <field name="auto_confirm_order"/>
+                                    <field name="link_existing_sale_orders"/>
+                                    <field name="import_order_note"/>
+                                    <field name="warehouse_on_order"/>
+                                    <field name="amount_tolerance"/>
+                                </group>
+                                <group string="Invoicing">
+                                    <field name="invoice_mode" widget="radio" readonly="not auto_confirm_order"/>
+                                    <div class="text-muted" colspan="2" invisible="auto_confirm_order">
+                                        Turn on Auto-Confirm Sale Orders to create invoices automatically.
+                                    </div>
+                                </group>
                             </group>
+                        </page>
+
+                        <page string="Custom Fields" name="custom_fields">
+                            <div class="alert alert-info" role="alert">
+                                Configure custom sale order fields for this database. Active mappings apply
+                                when a quotation is created or updated. Confirmed orders keep their custom values.
+                                Missing Shopify values are skipped.
+                                Standard Odoo fields, computed fields and related fields are excluded.
+                            </div>
+                            <field name="custom_field_ids">
+                                <list>
+                                    <field name="available_field_ids" column_invisible="True"/>
+                                    <field name="active"/>
+                                    <field name="field_id"/>
+                                    <field name="source"/>
+                                    <field name="value_summary"/>
+                                </list>
+                                <form string="Custom Field Mapping">
+                                    <group>
+                                        <field name="active"/>
+                                        <field name="available_field_ids" invisible="1"/>
+                                        <field name="field_id" string="Your custom field" options="{'no_create': True, 'no_open': True}"/>
+                                        <field name="field_type" invisible="1"/>
+                                        <field name="relation_model" invisible="1"/>
+                                        <field name="legacy_source" invisible="1"/>
+                                        <field name="value_json" invisible="1" force_save="1"/>
+                                        <field name="payload_path" invisible="1" force_save="1"/>
+                                        <field name="source" string="How to fill this field" widget="radio" invisible="not field_id"/>
+                                        <field name="shopify_value" invisible="not field_id or source != 'payload'"
+                                               required="source == 'payload' and not legacy_source"/>
+                                        <div class="text-muted" invisible="source != 'payload' or not legacy_source">
+                                            Your previous Shopify setting is saved. Choose an option above to replace it.
+                                        </div>
+                                        <field name="text_value" invisible="not field_id or source != 'fixed' or field_type not in ['char', 'text', 'html']" placeholder="Enter the value to use on every order"/>
+                                        <field name="boolean_value" invisible="not field_id or source != 'fixed' or field_type != 'boolean'"/>
+                                        <field name="integer_value" invisible="not field_id or source != 'fixed' or field_type != 'integer'"/>
+                                        <field name="number_value" invisible="not field_id or source != 'fixed' or field_type not in ['float', 'monetary']"/>
+                                        <field name="date_value" invisible="not field_id or source != 'fixed' or field_type != 'date'"/>
+                                        <field name="datetime_value" invisible="not field_id or source != 'fixed' or field_type != 'datetime'"/>
+                                        <field name="choice_id" invisible="not field_id or source != 'fixed' or field_type != 'selection'"
+                                               options="{'no_create': True, 'no_open': True}"/>
+                                        <field name="record_value" invisible="not field_id or source != 'fixed' or field_type != 'many2one'"
+                                               options="{'no_create': True, 'no_open': True}"/>
+                                        <div class="text-muted" invisible="not field_id or source != 'payload'">
+                                            Choose information from the Shopify order. If it is missing, the existing value is kept.
+                                        </div>
+                                    </group>
+                                </form>
+                            </field>
                         </page>
 
                         <page string="Order Import" name="order_import">

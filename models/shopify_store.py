@@ -122,6 +122,10 @@ class ShopifyStore(models.Model):
         help="Fallback when the Shopify payment method cannot be mapped. "
              "COD orders use the COD term; online/Razorpay orders use Prepaid.")
 
+    custom_field_ids = fields.One2many(
+        'shopify.custom.field', 'store_id', string='Custom Field Mappings',
+        context={'active_test': False}, copy=True)
+
     # -- Sale order options --------------------------------------------
     use_custom_sale_order_prefix = fields.Boolean(
         string='Custom Sale Order Name',
@@ -153,6 +157,12 @@ class ShopifyStore(models.Model):
         string='Auto-Confirm Sale Orders',
         help="Confirm imported orders automatically. Leave off until product "
              "mapping is proven, otherwise mistakes reserve stock.")
+    invoice_mode = fields.Selection(
+        [('none', "Don't create"), ('draft', 'Draft'), ('posted', 'Posted')],
+        string='Create Invoice', default='none', required=True,
+        help="Invoice the sale orders this connector confirms, right after confirmation. "
+             "Posted: the invoice is validated too. Needs Auto-Confirm Sale Orders. "
+             "Orders confirmed by hand or before this was set are not invoiced.")
     link_existing_sale_orders = fields.Boolean(
         string='Link Existing Sale Orders',
         default=True,
@@ -935,6 +945,12 @@ class ShopifyStore(models.Model):
         self.ensure_one()
         field_name = self._sale_order_studio_order_id_field_name()
         if not field_name:
+            return {}
+        mapping = self.custom_field_ids.filtered(
+            lambda item: item.active and item.field_id.name == field_name)
+        if mapping:
+            if mapping.source == 'payload' and mapping.payload_path == 'order_name_and_tracking':
+                return mapping.get_sale_order_values(dict(payload or {}, id=shopify_order_id))
             return {}
         value = self._format_studio_order_id(shopify_order_id, payload or {})
         if value:

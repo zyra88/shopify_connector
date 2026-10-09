@@ -14,8 +14,16 @@
                 <field name="store_id" optional="show"/>
                 <field name="partner_id"/>
                 <field name="is_guest_order" optional="hide" string="Guest"/>
-                <field name="financial_status" optional="show"/>
-                <field name="fulfillment_status" optional="hide"/>
+                <field name="financial_status" column_invisible="True"/>
+                <field name="payment_status_label" optional="show" widget="badge"
+                       decoration-success="financial_status == 'paid'"
+                       decoration-warning="financial_status in ('pending', 'authorized', 'partially_paid')"
+                       decoration-muted="financial_status in ('voided', 'refunded', 'partially_refunded')"/>
+                <field name="shopify_stage" optional="show" widget="badge"
+                       decoration-success="shopify_stage == 'fulfilled'"
+                       decoration-info="shopify_stage in ('unfulfilled', 'in_progress', 'partial')"
+                       decoration-warning="shopify_stage == 'on_hold'"
+                       decoration-muted="shopify_stage in ('cancelled', 'restocked')"/>
                 <field name="payment_gateway" optional="hide"/>
                 <field name="shopify_total" sum="Shopify Total"/>
                 <field name="odoo_total" sum="Odoo Total" optional="show"/>
@@ -41,8 +49,8 @@
                             class="btn-primary" invisible="state == 'imported'"/>
                     <button name="action_refetch_and_import" type="object"
                             string="Re-fetch from Shopify"/>
-                    <field name="state" widget="statusbar"
-                           statusbar_visible="draft,imported,needs_review"/>
+                    <field name="shopify_stage" widget="statusbar"
+                           statusbar_visible="unfulfilled,partial,fulfilled"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
@@ -64,6 +72,18 @@
 
                     <div class="oe_title">
                         <h1><field name="shopify_order_name" readonly="1"/></h1>
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="text-muted">Payment</span>
+                            <field name="payment_status_label" widget="badge"
+                                   decoration-success="financial_status == 'paid'"
+                                   decoration-warning="financial_status in ('pending', 'authorized', 'partially_paid')"
+                                   decoration-muted="financial_status in ('voided', 'refunded', 'partially_refunded')"/>
+                            <span class="text-muted ms-3">Odoo import</span>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'imported'"
+                                   decoration-warning="state == 'needs_review'"
+                                   decoration-danger="state == 'failed'"/>
+                        </div>
                     </div>
 
                     <div class="alert alert-warning" role="alert" invisible="not review_reason">
@@ -173,7 +193,7 @@
                             </field>
                         </page>
                         <page string="Shopify Payload" name="payload" groups="base.group_no_one">
-                            <field name="payload" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                            <field name="payload" widget="ace" options="{'mode': 'javascript'}" readonly="1"/>
                         </page>
                     </notebook>
                 </sheet>

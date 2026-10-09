@@ -86,7 +86,7 @@
                     </group>
                     <notebook>
                         <page string="Shopify Payload" name="payload">
-                            <field name="payload" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                            <field name="payload" widget="ace" options="{'mode': 'javascript'}" readonly="1"/>
                         </page>
                         <page string="Logs" name="logs">
                             <field name="log_ids" readonly="1">
@@ -113,7 +113,7 @@
         <field name="model">shopify.sync.queue</field>
         <field name="arch" type="xml">
             <form string="Shopify Payload" create="false" edit="false">
-                <field name="payload" widget="ace" options="{'mode': 'json'}" readonly="1"/>
+                <field name="payload" widget="ace" options="{'mode': 'javascript'}" readonly="1"/>
                 <footer>
                     <button string="Close" class="btn-secondary" special="cancel"/>
                 </footer>

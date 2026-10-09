@@ -16,3 +16,5 @@ from . import shopify_product_sync
 from . import shopify_product_catalog
 from . import shopify_order_importer
 from . import shopify_sale_order_conflict
+
+from . import shopify_custom_field

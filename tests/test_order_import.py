@@ -453,6 +453,40 @@ class TestOrderImport(ShopifyConnectorCase):
         self.assertEqual(record.sale_order_id.state, 'draft')
 
 
+    def _needs_sale_journal(self):
+        if not self.env['account.journal'].search_count([
+                ('type', '=', 'sale'), ('company_id', '=', self.company.id)]):
+            self.skipTest("No sales journal in this test database.")
+
+    def test_invoice_draft_after_auto_confirm(self):
+        self._needs_sale_journal()
+        self.store.write({'auto_confirm_order': True, 'invoice_mode': 'draft'})
+        sale_order = self.import_payload(self.order_payload()).sale_order_id
+        self.assertEqual(sale_order.state, 'sale')
+        self.assertEqual(sale_order.invoice_ids.mapped('state'), ['draft'])
+
+    def test_invoice_posted_after_auto_confirm(self):
+        self._needs_sale_journal()
+        self.store.write({'auto_confirm_order': True, 'invoice_mode': 'posted'})
+        record = self.import_payload(self.order_payload())
+        self.assertEqual(record.state, 'imported', record.review_reason)
+        self.assertEqual(record.sale_order_id.invoice_ids.mapped('state'), ['posted'])
+        # Re-importing the same order never invoices it twice.
+        self.import_payload(self.order_payload())
+        self.assertEqual(len(record.sale_order_id.invoice_ids), 1)
+
+    def test_no_invoice_by_default_or_on_review(self):
+        self.store.auto_confirm_order = True
+        sale_order = self.import_payload(self.order_payload()).sale_order_id
+        self.assertFalse(sale_order.invoice_ids)
+        self.store.invoice_mode = 'posted'
+        mismatched = self.order_payload(id='55000000000002', name='#1002')
+        mismatched['total_price'] = '999.00'
+        record = self.import_payload(mismatched)
+        self.assertEqual(record.state, 'needs_review')
+        self.assertFalse(record.sale_order_id.invoice_ids)
+
+
 @tagged('post_install', '-at_install', 'shopify')
 class TestOrderImportTaxes(ShopifyConnectorCase):
 

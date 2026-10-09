@@ -88,4 +88,10 @@
         <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
     </record>
 
+    <record id="shopify_custom_field_company_rule" model="ir.rule">
+        <field name="name">Shopify Custom Fields: multi-company</field>
+        <field name="model_id" ref="model_shopify_custom_field"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
 </odoo>

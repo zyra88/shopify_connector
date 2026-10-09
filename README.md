@@ -299,3 +299,45 @@ isolation and idempotency. No test touches the network.
 Refunds and returns, fulfilment write-back to Shopify, inventory push, product
 and customer catalogue imports, webhooks, and draft orders. The Shopify order
 mirror stores the full payload, so these can be added without a re-import.
+
+### Custom sale order fields
+
+The store's **Custom Fields** tab configures database-specific sale order values.
+Add a mapping and choose **Your custom field**. Then choose:
+
+- **Use the same value for every order**: enter text or a number, tick a checkbox,
+  pick a date, choose an available selection value, or search for an existing
+  related record by name. The form shows the control matching your custom field.
+- **Copy from Shopify**: choose a named option such as Order number / name,
+  Customer email, Payment method, Tracking number, Order number + tracking number,
+  Order total, or Shipping city.
+
+Customers do not need JSON, technical keys, record IDs, or Shopify paths.
+Shopify numeric amounts are converted for numeric destination fields. Values
+must still match the destination field: for example, copy Order total into a
+number field, and Customer email into a text field. Selection destinations must
+accept the incoming Shopify value; use a fixed dropdown option otherwise.
+Previous mappings remain stored, including previously entered Shopify paths.
+Choosing a new Shopify option replaces that previous source.
+
+Mappings apply to new and editable sale orders through the normal import flow.
+Confirmed orders retain their custom values. Missing or null payload values
+are skipped; an explicit `false` clears an optional field. Invalid values fail
+the order import with a validation error. Disable a mapping to stop applying it.
+Only Shopify Managers can configure mappings; company isolation applies.
+
+Studio/manual fields are discovered directly. Addon fields are included when
+all owning XML-ID modules are installed, have a nonempty author without
+`Odoo` / `OpenERP`, and are not this connector. This conservative metadata
+heuristic excludes standard Odoo fields even when extended by custom addons;
+it may omit custom addons with missing or misleading author metadata. Review
+addon manifest authors and field XML IDs if a custom field is absent.
+Computed, related, readonly, nonstored, group-restricted, one2many, many2many,
+and binary fields are excluded. No Python expressions are evaluated.
+
+Existing Order From, Type of Order, and Studio Order ID values are retained
+internally for compatibility; their old form section is removed. Configure these
+fields through Custom Field Mappings. Explicit mappings override legacy defaults during import. Mapping
+the legacy Studio Order ID disables its separate legacy refresh behavior, except
+for Order number + tracking number, which retains tracking updates after confirmation.
+Upgrade `shopify_connector` to version `18.0.1.0.23` to load the model and view.
