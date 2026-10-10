@@ -15,10 +15,10 @@
             <field name="barcode" position="after">
                 <field name="shopify_product_id"
                        placeholder="e.g. 8412345678901"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
                 <field name="shopify_variant_id"
                        placeholder="e.g. 45123456789012"
-                       groups="shopify_connector.group_shopify_user"
+                       groups="zyra_shopify_connector.group_shopify_user"
                        invisible="product_variant_count &gt; 1
                            or (product_variant_count == 0
                            and valid_product_template_attribute_line_ids)"/>
@@ -36,7 +36,7 @@
             <field name="barcode" position="after">
                 <field name="shopify_variant_id"
                        placeholder="e.g. 45123456789012"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
             </field>
         </field>
     </record>
@@ -47,9 +47,9 @@
         <field name="inherit_id" ref="product.product_variant_easy_edit_view"/>
         <field name="arch" type="xml">
             <xpath expr="//group[@name='codes']" position="inside">
-                <field name="shopify_variant_id" groups="shopify_connector.group_shopify_user"/>
+                <field name="shopify_variant_id" groups="zyra_shopify_connector.group_shopify_user"/>
                 <field name="shopify_product_id" readonly="1"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
             </xpath>
         </field>
     </record>
@@ -61,7 +61,7 @@
         <field name="arch" type="xml">
             <field name="barcode" position="after">
                 <field name="shopify_product_id" optional="hide"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
             </field>
         </field>
     </record>
@@ -73,7 +73,7 @@
         <field name="arch" type="xml">
             <field name="barcode" position="after">
                 <field name="shopify_variant_id" optional="hide"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
             </field>
         </field>
     </record>

@@ -4,13 +4,13 @@ from unittest.mock import Mock, patch
 from odoo import fields
 from odoo.exceptions import ValidationError
 
-from odoo.addons.shopify_connector.services.shopify_client import (
+from odoo.addons.zyra_shopify_connector.services.shopify_client import (
     ShopifyAuthError,
     ShopifyClient,
     exchange_client_credentials,
 )
-from odoo.addons.shopify_connector.tests.common import ShopifyConnectorCase
-from odoo.addons.shopify_connector.tests.test_shopify_client import fake_response
+from odoo.addons.zyra_shopify_connector.tests.common import ShopifyConnectorCase
+from odoo.addons.zyra_shopify_connector.tests.test_shopify_client import fake_response
 
 
 class TestClientCredentialsExchange(ShopifyConnectorCase):
@@ -82,7 +82,7 @@ class TestStoreClientCredentials(ShopifyConnectorCase):
             'tax_mode': 'none',
         })
         with patch(
-            'odoo.addons.shopify_connector.models.shopify_store.exchange_client_credentials',
+            'odoo.addons.zyra_shopify_connector.models.shopify_store.exchange_client_credentials',
             return_value={'access_token': 'fresh-token', 'expires_in': 3600},
         ) as exchange:
             token = store._get_valid_access_token()
@@ -92,7 +92,7 @@ class TestStoreClientCredentials(ShopifyConnectorCase):
         exchange.assert_called_once()
 
         with patch(
-            'odoo.addons.shopify_connector.models.shopify_store.exchange_client_credentials',
+            'odoo.addons.zyra_shopify_connector.models.shopify_store.exchange_client_credentials',
         ) as exchange_again:
             cached = store._get_valid_access_token()
         self.assertEqual(cached, 'fresh-token')
@@ -112,7 +112,7 @@ class TestStoreClientCredentials(ShopifyConnectorCase):
             'tax_mode': 'none',
         })
         with patch(
-            'odoo.addons.shopify_connector.models.shopify_store.exchange_client_credentials',
+            'odoo.addons.zyra_shopify_connector.models.shopify_store.exchange_client_credentials',
             return_value={'access_token': 'new-token', 'expires_in': 3600},
         ):
             token = store._get_valid_access_token()
@@ -132,7 +132,7 @@ class TestStoreClientCredentials(ShopifyConnectorCase):
 
     def test_cached_token_is_reused(self):
         with patch(
-            'odoo.addons.shopify_connector.models.shopify_store.exchange_client_credentials',
+            'odoo.addons.zyra_shopify_connector.models.shopify_store.exchange_client_credentials',
         ) as exchange:
             token = self.store._get_valid_access_token()
         self.assertEqual(token, 'shpat_testtoken')

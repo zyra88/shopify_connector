@@ -28,7 +28,7 @@ class ShopifyFetchCatalogWizard(models.TransientModel):
             raise UserError(_("Select a connected Shopify store."))
         stats = self.env['shopify.product.catalog'].fetch_for_store(self.store_id)
         action = self.env['ir.actions.act_window']._for_xml_id(
-            'shopify_connector.action_shopify_product_catalog')
+            'zyra_shopify_connector.action_shopify_product_catalog')
         action['target'] = 'current'
         action['effect'] = {
             'fadeout': 'slow',

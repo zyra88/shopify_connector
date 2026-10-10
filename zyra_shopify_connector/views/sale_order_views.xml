@@ -10,13 +10,13 @@
                 <button name="action_view_shopify_order" type="object"
                         class="oe_stat_button" icon="fa-shopping-basket"
                         string="Shopify"
-                        groups="shopify_connector.group_shopify_user"
+                        groups="zyra_shopify_connector.group_shopify_user"
                         invisible="not shopify_order_ref_id"/>
             </div>
 
             <group name="sale_reporting" position="after">
                 <group name="shopify_info" string="Shopify"
-                       groups="shopify_connector.group_shopify_user"
+                       groups="zyra_shopify_connector.group_shopify_user"
                        invisible="not shopify_store_id">
                     <field name="shopify_store_id" readonly="1"/>
                     <field name="shopify_order_name" readonly="1"/>
@@ -33,9 +33,9 @@
 
             <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
                 <field name="shopify_line_type" optional="hide" readonly="1"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
                 <field name="shopify_sku" optional="hide" readonly="1"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
             </xpath>
         </field>
     </record>
@@ -47,7 +47,7 @@
         <field name="arch" type="xml">
             <field name="name" position="after">
                 <field name="shopify_order_name" string="Shopify Order"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
             </field>
         </field>
     </record>
@@ -59,7 +59,7 @@
         <field name="arch" type="xml">
             <field name="name" position="after">
                 <field name="shopify_order_name" optional="hide"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
             </field>
         </field>
     </record>

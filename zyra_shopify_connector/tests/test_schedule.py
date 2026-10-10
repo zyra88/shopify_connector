@@ -7,14 +7,14 @@ from .common import ShopifyConnectorCase
 class TestSchedule(ShopifyConnectorCase):
 
     def cron(self):
-        return self.env.ref('shopify_connector.ir_cron_shopify_import_orders')
+        return self.env.ref('zyra_shopify_connector.ir_cron_shopify_import_orders')
 
     def test_scheduled_sync_switches_the_scheduled_action(self):
         self.store.auto_sync = False
         self.assertFalse(self.cron().active)
         self.store.auto_sync = True
         self.assertTrue(self.cron().active)
-        self.assertTrue(self.env.ref('shopify_connector.ir_cron_shopify_process_queue').active)
+        self.assertTrue(self.env.ref('zyra_shopify_connector.ir_cron_shopify_process_queue').active)
         self.store.auto_sync = False
         self.assertFalse(self.cron().active)
 

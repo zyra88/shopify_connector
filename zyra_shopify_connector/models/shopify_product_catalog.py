@@ -132,7 +132,7 @@ class ShopifyProductCatalog(models.Model):
 
     def action_open_fetch_wizard(self):
         return self.env['ir.actions.act_window']._for_xml_id(
-            'shopify_connector.action_shopify_fetch_catalog_wizard')
+            'zyra_shopify_connector.action_shopify_fetch_catalog_wizard')
 
     @api.model
     def fetch_for_store(self, store):

@@ -17,8 +17,8 @@ _logger = logging.getLogger(__name__)
 TOKEN_REFRESH_MARGIN_SECONDS = 300
 # Shopify REST ``ids`` filter batch size when re-fetching orders for Studio Order ID.
 STUDIO_ORDER_ID_SHOPIFY_FETCH_BATCH = 100
-IMPORT_CRON = 'shopify_connector.ir_cron_shopify_import_orders'
-SCHEDULED_CRONS = (IMPORT_CRON, 'shopify_connector.ir_cron_shopify_process_queue')
+IMPORT_CRON = 'zyra_shopify_connector.ir_cron_shopify_import_orders'
+SCHEDULED_CRONS = (IMPORT_CRON, 'zyra_shopify_connector.ir_cron_shopify_process_queue')
 SYNC_INTERVALS = {
     '5m': (5, 'minutes'),
     '15m': (15, 'minutes'),
@@ -55,21 +55,21 @@ class ShopifyStore(models.Model):
              "A bare handle or a full URL is accepted too.")
     client_id = fields.Char(
         string='Client ID', required=True, copy=False,
-        groups='shopify_connector.group_shopify_manager',
+        groups='zyra_shopify_connector.group_shopify_manager',
         help="Client ID from your app's Settings page in the Dev Dashboard.")
     client_secret = fields.Char(
         string='Client Secret', required=True, copy=False,
-        groups='shopify_connector.group_shopify_manager',
+        groups='zyra_shopify_connector.group_shopify_manager',
         help="Client secret (shpss_...) from the Dev Dashboard. The connector "
              "exchanges it for a short-lived access token automatically.")
     access_token = fields.Char(
         string='Cached Access Token', copy=False, readonly=True,
-        groups='shopify_connector.group_shopify_manager',
+        groups='zyra_shopify_connector.group_shopify_manager',
         help="Short-lived token returned by Shopify after exchanging the "
              "Client secret. Refreshed automatically; do not edit.")
     access_token_expires_at = fields.Datetime(
         string='Access Token Expires', readonly=True, copy=False,
-        groups='shopify_connector.group_shopify_manager',
+        groups='zyra_shopify_connector.group_shopify_manager',
         help="When the current Dev Dashboard access token expires. Refreshed "
              "automatically before each API call.")
     api_version = fields.Char(
@@ -1096,12 +1096,12 @@ class ShopifyStore(models.Model):
 
     def action_view_shopify_orders(self):
         return self._action_window(
-            'shopify_connector.action_shopify_order',
+            'zyra_shopify_connector.action_shopify_order',
             [('store_id', '=', self.id)], _('Shopify Orders'))
 
     def action_view_needs_review(self):
         action = self._action_window(
-            'shopify_connector.action_shopify_order',
+            'zyra_shopify_connector.action_shopify_order',
             [('store_id', '=', self.id), ('state', '=', 'needs_review')], _('Needs Review'))
         action['context'] = dict(action['context'], search_default_needs_review=1)
         return action
@@ -1115,24 +1115,24 @@ class ShopifyStore(models.Model):
 
     def action_view_customer_mappings(self):
         return self._action_window(
-            'shopify_connector.action_shopify_customer_mapping',
+            'zyra_shopify_connector.action_shopify_customer_mapping',
             [('store_id', '=', self.id)], _('Shopify Customers'))
 
     def action_view_link_variants(self):
         action = self._action_window(
-            'shopify_connector.action_shopify_product_catalog',
+            'zyra_shopify_connector.action_shopify_product_catalog',
             [('store_id', '=', self.id)], _('Link Variants'))
         action['context'] = dict(action.get('context') or {}, search_default_unmapped=1)
         return action
 
     def action_view_queue(self):
         return self._action_window(
-            'shopify_connector.action_shopify_sync_queue',
+            'zyra_shopify_connector.action_shopify_sync_queue',
             [('store_id', '=', self.id)], _('Sync Queue'))
 
     def action_view_logs(self):
         return self._action_window(
-            'shopify_connector.action_shopify_sync_log',
+            'zyra_shopify_connector.action_shopify_sync_log',
             [('store_id', '=', self.id)], _('Sync Logs'))
 
     # ------------------------------------------------------------------
