@@ -9,14 +9,14 @@
             <div name="button_box" position="inside">
                 <button name="action_view_shopify_mappings" type="object"
                         class="oe_stat_button" icon="fa-shopping-basket"
-                        groups="shopify_connector.group_shopify_user"
+                        groups="zyra_shopify_connector.group_shopify_user"
                         invisible="shopify_mapping_count == 0">
                     <field name="shopify_mapping_count" widget="statinfo" string="Shopify"/>
                 </button>
             </div>
             <notebook position="inside">
-                <page string="Shopify" name="shopify_connector"
-                      groups="shopify_connector.group_shopify_user">
+                <page string="Shopify" name="zyra_shopify_connector"
+                      groups="zyra_shopify_connector.group_shopify_user">
                     <group>
                         <group string="Shopify Identity">
                             <field name="is_shopify_customer" readonly="1"/>
@@ -52,12 +52,12 @@
         <field name="arch" type="xml">
             <field name="name" position="after">
                 <field name="shopify_customer_id" string="Shopify Customer ID"
-                       groups="shopify_connector.group_shopify_user"/>
+                       groups="zyra_shopify_connector.group_shopify_user"/>
             </field>
             <filter name="inactive" position="before">
                 <filter name="shopify_customers" string="From Shopify"
                         domain="[('is_shopify_customer', '=', True)]"
-                        groups="shopify_connector.group_shopify_user"/>
+                        groups="zyra_shopify_connector.group_shopify_user"/>
                 <separator/>
             </filter>
         </field>

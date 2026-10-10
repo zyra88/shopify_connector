@@ -94,7 +94,7 @@ class TestCustomFields(ShopifyConnectorCase):
             mapping.get_sale_order_values({'total_price': 'invalid'})
 
     def test_store_form_mapping_uses_plain_text(self):
-        with Form(self.store, view='shopify_connector.shopify_store_view_form') as store_form:
+        with Form(self.store, view='zyra_shopify_connector.shopify_store_view_form') as store_form:
             with store_form.custom_field_ids.new() as mapping_form:
                 mapping_form.field_id = self.custom_field
                 mapping_form.text_value = 'Website'

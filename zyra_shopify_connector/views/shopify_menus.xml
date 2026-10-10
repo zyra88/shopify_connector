@@ -3,9 +3,9 @@
 
     <menuitem id="menu_shopify_root"
               name="Shopify"
-              web_icon="shopify_connector,static/description/icon.png"
+              web_icon="zyra_shopify_connector,static/description/icon.png"
               sequence="55"
-              groups="shopify_connector.group_shopify_user"/>
+              groups="zyra_shopify_connector.group_shopify_user"/>
 
     <!-- Operations -->
     <menuitem id="menu_shopify_orders_root"
@@ -84,7 +84,7 @@
               name="Configuration"
               parent="menu_shopify_root"
               sequence="90"
-              groups="shopify_connector.group_shopify_manager"/>
+              groups="zyra_shopify_connector.group_shopify_manager"/>
 
     <menuitem id="menu_shopify_store"
               name="Stores"

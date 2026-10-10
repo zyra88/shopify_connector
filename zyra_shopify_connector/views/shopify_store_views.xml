@@ -50,7 +50,7 @@
                     <button name="action_backfill_studio_order_ids" type="object"
                             string="Resync Order IDs from Shopify" icon="fa-tag"
                             invisible="connection_state != 'connected' or not show_fill_studio_order_id_button"
-                            groups="shopify_connector.group_shopify_manager"
+                            groups="zyra_shopify_connector.group_shopify_manager"
                             confirm="Re-fetch imported orders missing Studio Order ID from Shopify and fill Order ID (order name + tracking when available)?"/>
                     <field name="connection_state" widget="statusbar"
                            statusbar_visible="draft,connected"/>
@@ -107,12 +107,12 @@
                             <field name="shop_domain" placeholder="mystore.myshopify.com"/>
                             <field name="client_id"
                                    placeholder="fb2cf3632a1f32a4b7836559da18198e"
-                                   groups="shopify_connector.group_shopify_manager"/>
+                                   groups="zyra_shopify_connector.group_shopify_manager"/>
                             <field name="client_secret" password="True"
                                    placeholder="shpss_..."
-                                   groups="shopify_connector.group_shopify_manager"/>
+                                   groups="zyra_shopify_connector.group_shopify_manager"/>
                             <field name="access_token_expires_at"
-                                   groups="shopify_connector.group_shopify_manager"/>
+                                   groups="zyra_shopify_connector.group_shopify_manager"/>
                             <field name="api_version"/>
                             <field name="api_protocol"/>
                         </group>

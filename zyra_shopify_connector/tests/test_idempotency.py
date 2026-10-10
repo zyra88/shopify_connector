@@ -159,7 +159,7 @@ class TestIdempotency(ShopifyConnectorCase):
         def fake_iter_orders(*_args, **_kwargs):
             return iter(payloads)
 
-        with patch('odoo.addons.shopify_connector.services.shopify_client.'
+        with patch('odoo.addons.zyra_shopify_connector.services.shopify_client.'
                    'ShopifyClient.iter_orders', fake_iter_orders):
             first = self.store.sync_orders()
             second = self.store.sync_orders()

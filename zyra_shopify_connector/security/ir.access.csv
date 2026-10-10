@@ -1,0 +1,35 @@
+id,name,model_id,group_id/id,operation,domain
+access_shopify_store_user,shopify.store.user,shopify.store,zyra_shopify_connector.group_shopify_user,r,
+access_shopify_store_manager,shopify.store.manager,shopify.store,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_order_user,shopify.order.user,shopify.order,zyra_shopify_connector.group_shopify_user,cru,
+access_shopify_order_manager,shopify.order.manager,shopify.order,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_order_line_user,shopify.order.line.user,shopify.order.line,zyra_shopify_connector.group_shopify_user,crud,
+access_shopify_order_line_manager,shopify.order.line.manager,shopify.order.line,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_customer_mapping_user,shopify.customer.mapping.user,shopify.customer.mapping,zyra_shopify_connector.group_shopify_user,cru,
+access_shopify_customer_mapping_manager,shopify.customer.mapping.manager,shopify.customer.mapping,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_product_mapping_user,shopify.product.mapping.user,shopify.product.mapping,zyra_shopify_connector.group_shopify_user,cru,
+access_shopify_product_mapping_manager,shopify.product.mapping.manager,shopify.product.mapping,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_product_catalog_user,shopify.product.catalog.user,shopify.product.catalog,zyra_shopify_connector.group_shopify_user,cru,
+access_shopify_product_catalog_manager,shopify.product.catalog.manager,shopify.product.catalog,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_variant_mapping_user,shopify.variant.mapping.user,shopify.variant.mapping,zyra_shopify_connector.group_shopify_user,cru,
+access_shopify_variant_mapping_manager,shopify.variant.mapping.manager,shopify.variant.mapping,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_sync_queue_user,shopify.sync.queue.user,shopify.sync.queue,zyra_shopify_connector.group_shopify_user,cru,
+access_shopify_sync_queue_manager,shopify.sync.queue.manager,shopify.sync.queue,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_sync_log_user,shopify.sync.log.user,shopify.sync.log,zyra_shopify_connector.group_shopify_user,cr,
+access_shopify_sync_log_manager,shopify.sync.log.manager,shopify.sync.log,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_import_orders_wizard,shopify.import.orders.wizard,shopify.import.orders.wizard,zyra_shopify_connector.group_shopify_user,crud,
+access_shopify_fetch_catalog_wizard,shopify.fetch.catalog.wizard,shopify.fetch.catalog.wizard,zyra_shopify_connector.group_shopify_user,crud,
+access_shopify_sale_order_conflict_user,shopify.sale.order.conflict.user,shopify.sale.order.conflict,zyra_shopify_connector.group_shopify_user,r,
+access_shopify_sale_order_conflict_manager,shopify.sale.order.conflict.manager,shopify.sale.order.conflict,zyra_shopify_connector.group_shopify_manager,crud,
+access_shopify_custom_field_user,shopify.custom.field.user,shopify.custom.field,zyra_shopify_connector.group_shopify_user,r,
+access_shopify_custom_field_manager,shopify.custom.field.manager,shopify.custom.field,zyra_shopify_connector.group_shopify_manager,crud,
+shopify_store_company_rule,Shopify Store: multi-company,shopify.store,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+shopify_order_company_rule,Shopify Order: multi-company,shopify.order,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+shopify_order_line_company_rule,Shopify Order Line: multi-company,shopify.order.line,,crud,"['|', ('store_id.company_id', '=', False), ('store_id.company_id', 'in', company_ids)]"
+shopify_customer_mapping_company_rule,Shopify Customer Mapping: multi-company,shopify.customer.mapping,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+shopify_product_mapping_company_rule,Shopify Product Mapping: multi-company,shopify.product.mapping,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+shopify_product_catalog_company_rule,Shopify Product Catalog: multi-company,shopify.product.catalog,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+shopify_variant_mapping_company_rule,Shopify Variant Mapping: multi-company,shopify.variant.mapping,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+shopify_sync_queue_company_rule,Shopify Sync Queue: multi-company,shopify.sync.queue,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+shopify_sync_log_company_rule,Shopify Sync Log: multi-company,shopify.sync.log,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+shopify_custom_field_company_rule,Shopify Custom Fields: multi-company,shopify.custom.field,,crud,"[('company_id', 'in', company_ids)]"
