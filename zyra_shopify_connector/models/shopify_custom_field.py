@@ -192,7 +192,7 @@ class ShopifyCustomField(models.Model):
         custom_modules = {module.name for module in modules
                           if module.author and not any(marker in module.author.lower()
                                                        for marker in ('odoo', 'openerp'))
-                          and module.name != 'shopify_connector'}
+                          and module.name != 'zyra_shopify_connector'}
         allowed = self.env['ir.model.fields']
         for meta in metadata:
             field = self.env['sale.order']._fields.get(meta.name)

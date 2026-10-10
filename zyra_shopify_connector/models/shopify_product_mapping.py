@@ -88,12 +88,12 @@ class ShopifyProductMapping(models.Model):
 
     def action_open_fetch_wizard(self):
         return self.env['ir.actions.act_window']._for_xml_id(
-            'shopify_connector.action_shopify_fetch_catalog_wizard')
+            'zyra_shopify_connector.action_shopify_fetch_catalog_wizard')
 
     def action_open_variants(self):
         self.ensure_one()
         action = self.env['ir.actions.act_window']._for_xml_id(
-            'shopify_connector.action_shopify_product_catalog')
+            'zyra_shopify_connector.action_shopify_product_catalog')
         action['domain'] = [
             ('store_id', '=', self.store_id.id),
             ('shopify_product_id', '=', self.shopify_product_id),

@@ -116,7 +116,7 @@ class ShopifySaleOrderConflict(models.Model):
         self.search([('store_id', 'in', stores.ids), ('state', '=', 'open')]).unlink()
         count = sum(self._scan_store(shopify_store) for shopify_store in stores)
         action = self.env['ir.actions.act_window']._for_xml_id(
-            'shopify_connector.action_shopify_sale_order_conflict')
+            'zyra_shopify_connector.action_shopify_sale_order_conflict')
         action['domain'] = [('store_id', 'in', stores.ids)]
         action['name'] = _('Order Duplicates (%s found)', count)
         action['context'] = dict(self.env.context, search_default_open=1)

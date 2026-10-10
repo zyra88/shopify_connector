@@ -31,12 +31,12 @@
                 <button name="action_keep_manual_order" type="object"
                         string="Keep Manual" class="btn-link"
                         invisible="state != 'open'"
-                        groups="shopify_connector.group_shopify_manager"
+                        groups="zyra_shopify_connector.group_shopify_manager"
                         confirm="The imported sale order will be unlinked from Shopify and cancelled if it is still a quotation. The manual order will be linked and refreshed from Shopify. Continue?"/>
                 <button name="action_keep_imported_order" type="object"
                         string="Keep Imported" class="btn-link"
                         invisible="state != 'open'"
-                        groups="shopify_connector.group_shopify_manager"
+                        groups="zyra_shopify_connector.group_shopify_manager"
                         confirm="The manual order will lose its Studio Order ID and be cancelled only if it is still a quotation; confirmed sale orders stay open for you to handle. The imported order stays linked to Shopify. Continue?"/>
                 <field name="currency_id" column_invisible="True"/>
                 <field name="company_id" column_invisible="True"/>
@@ -54,12 +54,12 @@
                             string="Keep Manual Order"
                             class="btn-primary"
                             invisible="state != 'open'"
-                            groups="shopify_connector.group_shopify_manager"
+                            groups="zyra_shopify_connector.group_shopify_manager"
                             confirm="The imported sale order will be unlinked from Shopify and cancelled if it is still a quotation. The manual order will be linked and refreshed from Shopify. Continue?"/>
                     <button name="action_keep_imported_order" type="object"
                             string="Keep Imported Order"
                             invisible="state != 'open'"
-                            groups="shopify_connector.group_shopify_manager"
+                            groups="zyra_shopify_connector.group_shopify_manager"
                             confirm="The manual order will lose its Studio Order ID and be cancelled only if it is still a quotation; confirmed sale orders stay open for you to handle. The imported order stays linked to Shopify. Continue?"/>
                     <field name="state" widget="statusbar" statusbar_visible="open,resolved"/>
                 </header>

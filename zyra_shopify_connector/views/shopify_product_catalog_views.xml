@@ -83,7 +83,7 @@
             <p class="o_view_nocontent_smiling_face">No Shopify variants loaded yet</p>
             <p>
                 <strong>Step 1:</strong>
-                <a type="action" name="%(shopify_connector.action_shopify_fetch_catalog_wizard)d"
+                <a type="action" name="%(zyra_shopify_connector.action_shopify_fetch_catalog_wizard)d"
                    class="btn btn-primary">Fetch from Shopify</a>
             </p>
             <p class="mt-2">

@@ -270,7 +270,7 @@ class ShopifySyncQueue(models.Model):
             'res_model': 'shopify.sync.queue',
             'res_id': self.id,
             'view_mode': 'form',
-            'views': [(self.env.ref('shopify_connector.shopify_sync_queue_payload_form').id, 'form')],
+            'views': [(self.env.ref('zyra_shopify_connector.shopify_sync_queue_payload_form').id, 'form')],
             'target': 'new',
             'name': _('Shopify Payload'),
         }

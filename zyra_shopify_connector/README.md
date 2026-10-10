@@ -285,7 +285,7 @@ each stable version for at least 12 months.
 ## Tests
 
 ```bash
-odoo -d <db> -u shopify_connector --test-enable --test-tags /shopify_connector --stop-after-init
+odoo -d <db> -u zyra_shopify_connector --test-enable --test-tags /zyra_shopify_connector --stop-after-init
 ```
 
 77 tests cover client normalisation (GraphQL and REST), Dev Dashboard token
@@ -340,4 +340,4 @@ internally for compatibility; their old form section is removed. Configure these
 fields through Custom Field Mappings. Explicit mappings override legacy defaults during import. Mapping
 the legacy Studio Order ID disables its separate legacy refresh behavior, except
 for Order number + tracking number, which retains tracking updates after confirmation.
-Upgrade `shopify_connector` to version `18.0.1.0.23` to load the model and view.
+Upgrade `zyra_shopify_connector` to version `18.0.1.0.23` to load the model and view.
