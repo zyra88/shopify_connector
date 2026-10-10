@@ -29,6 +29,8 @@ Features
 * Sync queue, sync logs and actionable error messages.
 """,
     'license': 'LGPL-3',
+    'price': 50.0,
+    'currency': 'USD',
     'depends': [
         'base',
         'mail',
