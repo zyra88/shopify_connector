@@ -31,6 +31,7 @@ Features
     'license': 'LGPL-3',
     'price': 50.0,
     'currency': 'USD',
+    'images': ['static/description/banner.png'],
     'depends': [
         'base',
         'mail',
