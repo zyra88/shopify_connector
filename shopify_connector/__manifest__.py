@@ -28,8 +28,6 @@ Features
 * Idempotent: re-running the import creates no duplicates.
 * Sync queue, sync logs and actionable error messages.
 """,
-    'author': 'Galaxy Weblinks',
-    'website': 'https://www.galaxyweblinks.com/',
     'license': 'LGPL-3',
     'depends': [
         'base',
