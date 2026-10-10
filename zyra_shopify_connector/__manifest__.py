@@ -1,5 +1,5 @@
 {
-    'name': 'Shopify Connector',
+    'name': 'Odoo Shopify Connector',
     'version': '20.0.1.0.25',
     'category': 'Sales/Sales',
     'author': 'M.SHAHIDH',
