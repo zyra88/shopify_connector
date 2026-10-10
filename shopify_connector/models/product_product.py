@@ -16,10 +16,7 @@ class ProductProduct(models.Model):
     shopify_variant_mapping_ids = fields.One2many(
         'shopify.variant.mapping', 'product_id', string='Shopify Variant Mappings')
 
-    _sql_constraints = [
-        (
-            'shopify_variant_id_uniq',
-            'UNIQUE(shopify_variant_id)',
-            'Another product already carries this Shopify Variant ID.',
-        ),
-    ]
+    _shopify_variant_id_uniq = models.Constraint(
+        'UNIQUE(shopify_variant_id)',
+        "Another product already carries this Shopify Variant ID.",
+    )

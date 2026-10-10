@@ -57,7 +57,7 @@
                 <field name="email"/>
                 <field name="phone"/>
                 <field name="store_id"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
                 </group>
             </search>

@@ -173,8 +173,10 @@ class ShopifyCustomField(models.Model):
         self.source = 'fixed'
         self.payload_path = False
 
-    _sql_constraints = [('store_field_unique', 'unique(store_id, field_id)',
-                         'Configure each custom field only once per store.')]
+    _store_field_unique = models.Constraint(
+        'unique(store_id, field_id)',
+        'Configure each custom field only once per store.',
+    )
 
     @api.model
     def _eligible_fields(self):

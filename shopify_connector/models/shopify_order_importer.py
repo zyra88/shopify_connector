@@ -494,20 +494,20 @@ class ShopifyOrderImporter(models.AbstractModel):
             'product_uom_qty': 1.0,
             'price_unit': -residual,
             'discount': 0.0,
-            'tax_id': [(5, 0, 0)],
+            'tax_ids': [(5, 0, 0)],
             'shopify_line_type': 'discount',
         }
 
     @api.model
     def _prepare_tax_values(self, store, payload, tax_lines):
         if store.tax_mode == 'none':
-            return {'tax_id': [(5, 0, 0)]}
+            return {'tax_ids': [(5, 0, 0)]}
         if store.tax_mode == 'odoo':
-            # Leave tax_id out entirely so Odoo's own computation runs.
+            # Leave tax_ids out entirely so Odoo's own computation runs.
             return {}
         taxes = self.env['shopify.tax.resolver'].resolve(
             store, tax_lines, payload.get('taxes_included'))
-        return {'tax_id': [(6, 0, taxes.ids)]}
+        return {'tax_ids': [(6, 0, taxes.ids)]}
 
     @api.model
     def _split_price_and_discount(self, store, unit_price, quantity, discount_amount, discounted_unit_price):

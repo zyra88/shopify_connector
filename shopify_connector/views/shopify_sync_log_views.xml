@@ -71,7 +71,7 @@
                         domain="[('create_date', '&gt;=', datetime.datetime.combine(context_today(), datetime.time(0,0,0)))]"/>
                 <filter name="last_week" string="Last 7 Days"
                         domain="[('create_date', '&gt;=', (context_today() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
                     <filter name="group_level" string="Level" context="{'group_by': 'level'}"/>
                     <filter name="group_operation" string="Operation" context="{'group_by': 'operation'}"/>

@@ -513,9 +513,9 @@ class TestOrderImportTaxes(ShopifyConnectorCase):
         record = self.import_payload(payload)
 
         line = record.sale_order_id.order_line
-        self.assertEqual(len(line.tax_id), 1)
-        self.assertEqual(line.tax_id.amount, 20.0)
-        self.assertFalse(line.tax_id.price_include)
+        self.assertEqual(len(line.tax_ids), 1)
+        self.assertEqual(line.tax_ids.amount, 20.0)
+        self.assertFalse(line.tax_ids.price_include)
         self.assertEqual(record.sale_order_id.amount_total, 240.0)
         self.assertTrue(record.is_reconciled)
 
@@ -532,7 +532,7 @@ class TestOrderImportTaxes(ShopifyConnectorCase):
         record = self.import_payload(payload)
 
         line = record.sale_order_id.order_line
-        self.assertTrue(line.tax_id.price_include)
+        self.assertTrue(line.tax_ids.price_include)
         self.assertEqual(record.sale_order_id.amount_total, 120.0)
         self.assertAlmostEqual(record.sale_order_id.amount_tax, 20.0, places=2)
         self.assertTrue(record.is_reconciled)
@@ -544,6 +544,7 @@ class TestOrderImportTaxes(ShopifyConnectorCase):
             'amount_type': 'percent',
             'type_tax_use': 'sale',
             'company_id': self.company.id,
+            'country_id': self.company.account_fiscal_country_id.id,
             'price_include_override': 'tax_excluded',
             'tax_group_id': self.tax_group.id,
         })
@@ -555,7 +556,7 @@ class TestOrderImportTaxes(ShopifyConnectorCase):
         payload['total_price'] = '240.00'
 
         record = self.import_payload(payload)
-        self.assertEqual(record.sale_order_id.order_line.tax_id, existing)
+        self.assertEqual(record.sale_order_id.order_line.tax_ids, existing)
 
     def test_tax_mode_none_strips_product_taxes(self):
         self.store.tax_mode = 'none'
@@ -565,10 +566,11 @@ class TestOrderImportTaxes(ShopifyConnectorCase):
             'amount_type': 'percent',
             'type_tax_use': 'sale',
             'company_id': self.company.id,
+            'country_id': self.company.account_fiscal_country_id.id,
             'tax_group_id': self.tax_group.id,
         })
         self.product_by_sku.taxes_id = tax
 
         record = self.import_payload(self.order_payload())
-        self.assertFalse(record.sale_order_id.order_line.tax_id)
+        self.assertFalse(record.sale_order_id.order_line.tax_ids)
         self.assertEqual(record.sale_order_id.amount_total, 200.0)

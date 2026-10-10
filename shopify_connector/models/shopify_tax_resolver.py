@@ -61,6 +61,7 @@ class ShopifyTaxResolver(models.AbstractModel):
             'amount_type': 'percent',
             'type_tax_use': 'sale',
             'company_id': company.id,
+            'country_id': (company.account_fiscal_country_id or company.country_id).id,
             'price_include_override': 'tax_included' if taxes_included else 'tax_excluded',
         })
         self.env['shopify.sync.log'].log(

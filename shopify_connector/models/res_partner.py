@@ -79,11 +79,11 @@ class ResPartner(models.Model):
         help="Set on the child contacts the connector creates so later "
              "imports reuse them instead of piling up duplicates.")
 
-    @api.depends('phone', 'mobile')
+    @api.depends('phone')
     def _compute_shopify_phone_keys(self):
         for partner in self:
             partner.shopify_phone_key = phone_key(partner.phone) or False
-            partner.shopify_mobile_key = phone_key(partner.mobile) or False
+            partner.shopify_mobile_key = phone_key(partner['mobile'] if 'mobile' in partner._fields else None) or False
 
     @api.depends('shopify_mapping_ids')
     def _compute_shopify_mapping_count(self):

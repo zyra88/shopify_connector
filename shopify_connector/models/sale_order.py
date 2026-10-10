@@ -28,13 +28,10 @@ class SaleOrder(models.Model):
     shopify_created_at = fields.Datetime(string='Shopify Created At', copy=False, readonly=True)
     shopify_updated_at = fields.Datetime(string='Shopify Updated At', copy=False, readonly=True)
 
-    _sql_constraints = [
-        (
-            'shopify_order_uniq',
-            'UNIQUE(shopify_store_id, shopify_order_id)',
-            'This Shopify order has already been imported for this store.',
-        ),
-    ]
+    _shopify_order_uniq = models.Constraint(
+        'UNIQUE(shopify_store_id, shopify_order_id)',
+        "This Shopify order has already been imported for this store.",
+    )
 
     def action_view_shopify_order(self):
         self.ensure_one()

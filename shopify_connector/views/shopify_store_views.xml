@@ -317,7 +317,7 @@
                 <filter name="scheduled" string="Scheduled Sync" domain="[('auto_sync', '=', True)]"/>
                 <separator/>
                 <filter name="inactive" string="Archived" domain="[('active', '=', False)]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_company" string="Company" context="{'group_by': 'company_id'}"/>
                 </group>
             </search>

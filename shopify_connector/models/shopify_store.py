@@ -246,7 +246,7 @@ class ShopifyStore(models.Model):
         help="Applied to customers this connector creates.")
     receivable_account_id = fields.Many2one(
         'account.account', string='Customer Receivable Account',
-        domain="[('account_type', '=', 'asset_receivable'), ('deprecated', '=', False), "
+        domain="[('account_type', '=', 'asset_receivable'), "
                "('company_ids', 'parent_of', company_id)]",
         help="Account Receivable set on the customers this connector creates or owns "
              "(linked to a Shopify customer). Customers created by hand in Odoo and "
@@ -308,18 +308,15 @@ class ShopifyStore(models.Model):
     queue_count = fields.Integer(compute='_compute_counts')
     error_log_count = fields.Integer(compute='_compute_counts')
 
-    _sql_constraints = [
-        (
-            'shop_domain_company_uniq',
-            'UNIQUE(shop_domain, company_id)',
-            'A Shopify store with this domain already exists for this company.',
-        ),
-        (
-            'page_size_range',
-            'CHECK(page_size BETWEEN 1 AND 250)',
-            'Page size must be between 1 and 250 (Shopify\'s maximum).',
-        ),
-    ]
+    _shop_domain_company_uniq = models.Constraint(
+        'UNIQUE(shop_domain, company_id)',
+        "A Shopify store with this domain already exists for this company.",
+    )
+
+    _page_size_range = models.Constraint(
+        'CHECK(page_size BETWEEN 1 AND 250)',
+        "Page size must be between 1 and 250 (Shopify's maximum).",
+    )
 
     # ------------------------------------------------------------------
     # Schedule (the shared "Shopify: Import Orders" scheduled action)

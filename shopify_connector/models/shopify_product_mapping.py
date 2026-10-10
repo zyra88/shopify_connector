@@ -41,13 +41,10 @@ class ShopifyProductMapping(models.Model):
         string='Status', readonly=True, index=True)
     last_synced_at = fields.Datetime(readonly=True)
 
-    _sql_constraints = [
-        (
-            'store_product_uniq',
-            'UNIQUE(store_id, shopify_product_id)',
-            'This Shopify product is already mapped for this store.',
-        ),
-    ]
+    _store_product_uniq = models.Constraint(
+        'UNIQUE(store_id, shopify_product_id)',
+        "This Shopify product is already mapped for this store.",
+    )
 
     @api.depends('shopify_title', 'product_tmpl_id', 'shopify_product_id')
     def _compute_display_name(self):
@@ -178,13 +175,10 @@ class ShopifyVariantMapping(models.Model):
         MATCH_SOURCES, string='Matched By', default='manual', readonly=True)
     last_synced_at = fields.Datetime(readonly=True)
 
-    _sql_constraints = [
-        (
-            'store_variant_uniq',
-            'UNIQUE(store_id, shopify_variant_id)',
-            'This Shopify variant is already mapped for this store.',
-        ),
-    ]
+    _store_variant_uniq = models.Constraint(
+        'UNIQUE(store_id, shopify_variant_id)',
+        "This Shopify variant is already mapped for this store.",
+    )
 
     @api.depends('product_id', 'shopify_variant_id')
     def _compute_display_name(self):

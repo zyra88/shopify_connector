@@ -45,13 +45,10 @@ class ShopifyProductCatalog(models.Model):
         string='Status', compute='_compute_state', store=True, index=True)
     display_name = fields.Char(compute='_compute_display_name')
 
-    _sql_constraints = [
-        (
-            'store_variant_uniq',
-            'UNIQUE(store_id, shopify_variant_id)',
-            'This Shopify variant is already listed for this store.',
-        ),
-    ]
+    _store_variant_uniq = models.Constraint(
+        'UNIQUE(store_id, shopify_variant_id)',
+        "This Shopify variant is already listed for this store.",
+    )
 
     @api.depends('shopify_product_title', 'shopify_color', 'shopify_size', 'sku')
     def _compute_display_name(self):

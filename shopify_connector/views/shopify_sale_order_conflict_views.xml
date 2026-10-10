@@ -123,7 +123,7 @@
                 <field name="imported_studio_order_id"/>
                 <filter name="open" string="Open" domain="[('state', '=', 'open')]"/>
                 <filter name="resolved" string="Resolved" domain="[('state', '=', 'resolved')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
                 </group>
             </search>

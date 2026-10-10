@@ -139,13 +139,10 @@ class ShopifyOrder(models.Model):
         string='Shopify Payload', readonly=True,
         help="Normalised payload of the last import, kept for audit and replay.")
 
-    _sql_constraints = [
-        (
-            'store_order_uniq',
-            'UNIQUE(store_id, shopify_order_id)',
-            'This Shopify order is already recorded for this store.',
-        ),
-    ]
+    _store_order_uniq = models.Constraint(
+        'UNIQUE(store_id, shopify_order_id)',
+        "This Shopify order is already recorded for this store.",
+    )
 
     @api.depends('fulfillment_status', 'shopify_cancelled_at', 'financial_status')
     def _compute_shopify_status(self):

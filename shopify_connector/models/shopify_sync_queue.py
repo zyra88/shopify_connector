@@ -62,13 +62,10 @@ class ShopifySyncQueue(models.Model):
     sale_order_id = fields.Many2one('sale.order', string='Sale Order', ondelete='set null')
     log_ids = fields.One2many('shopify.sync.log', 'queue_id', string='Logs')
 
-    _sql_constraints = [
-        (
-            'payload_not_empty',
-            'CHECK (payload IS NOT NULL)',
-            'A queue job must carry a payload.',
-        ),
-    ]
+    _payload_not_empty = models.Constraint(
+        'CHECK (payload IS NOT NULL)',
+        "A queue job must carry a payload.",
+    )
 
     def init(self):
         # A partial index rather than a UNIQUE constraint: an order may legitimately

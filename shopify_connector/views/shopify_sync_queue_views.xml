@@ -135,7 +135,7 @@
                 <separator/>
                 <filter name="due" string="Due Now"
                         domain="['&amp;', ('state', '=', 'pending'), '|', ('next_attempt_at', '=', False), ('next_attempt_at', '&lt;=', datetime.datetime.now())]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
                 </group>

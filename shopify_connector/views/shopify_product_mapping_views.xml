@@ -106,7 +106,7 @@
                         domain="[('connection_state', '=', 'connected')]"/>
                 <filter name="no_template" string="No Odoo Template"
                         domain="[('product_tmpl_id', '=', False)]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_state" string="Status"
                             context="{'group_by': 'connection_state'}"/>
                     <filter name="group_store" string="Store"
@@ -197,7 +197,7 @@
                 <field name="barcode"/>
                 <field name="store_id"/>
                 <filter name="manual" string="Mapped Manually" domain="[('match_source', '=', 'manual')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_store" string="Store" context="{'group_by': 'store_id'}"/>
                     <filter name="group_source" string="Matched By" context="{'group_by': 'match_source'}"/>
                 </group>

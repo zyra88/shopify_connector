@@ -16,6 +16,8 @@ class ShopifyConnectorCase(TransactionCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.company = cls.env.company
+        cls.company.country_id = cls.company.country_id or cls.env.ref('base.us')
+        cls.company.account_fiscal_country_id = cls.company.account_fiscal_country_id or cls.company.country_id
         cls.currency = cls.company.currency_id
 
         cls.warehouse = cls.env['stock.warehouse'].search(

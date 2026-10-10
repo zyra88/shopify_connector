@@ -65,13 +65,10 @@ class ShopifySaleOrderConflict(models.Model):
         compute='_compute_show_fill_studio_order_id_button',
     )
 
-    _sql_constraints = [
-        (
-            'shopify_conflict_uniq',
-            'UNIQUE(store_id, shopify_order_id)',
-            'This Shopify order is already listed as a duplicate for this store.',
-        ),
-    ]
+    _shopify_conflict_uniq = models.Constraint(
+        'UNIQUE(store_id, shopify_order_id)',
+        "This Shopify order is already listed as a duplicate for this store.",
+    )
 
     @api.depends(
         'shopify_order_name', 'shopify_order_id',

@@ -57,7 +57,7 @@
                         domain="[('state', '=', 'mapped')]"/>
                 <filter name="has_suggestion" string="Has Suggestion"
                         domain="[('suggested_product_id', '!=', False), ('state', '=', 'unmapped')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_product" string="Product"
                             context="{'group_by': 'shopify_product_title'}"/>
                     <filter name="group_model" string="Model Code"

@@ -28,13 +28,10 @@ class ShopifyCustomerMapping(models.Model):
     last_synced_at = fields.Datetime(readonly=True)
     order_count = fields.Integer(compute='_compute_order_count')
 
-    _sql_constraints = [
-        (
-            'store_customer_uniq',
-            'UNIQUE(store_id, shopify_customer_id)',
-            'This Shopify customer is already mapped for this store.',
-        ),
-    ]
+    _store_customer_uniq = models.Constraint(
+        'UNIQUE(store_id, shopify_customer_id)',
+        "This Shopify customer is already mapped for this store.",
+    )
 
     @api.depends('partner_id', 'shopify_customer_id')
     def _compute_display_name(self):
