@@ -78,18 +78,5 @@
         </field>
     </record>
 
-    <record id="product_template_search_view_shopify" model="ir.ui.view">
-        <field name="name">product.template.search.shopify</field>
-        <field name="model">product.template</field>
-        <field name="inherit_id" ref="product.product_template_search_view"/>
-        <field name="arch" type="xml">
-            <field name="name" position="after">
-                <field name="shopify_product_id" string="Shopify Product ID"
-                       groups="shopify_connector.group_shopify_user"/>
-                <field name="shopify_variant_id" string="Shopify Variant ID"
-                       groups="shopify_connector.group_shopify_user"/>
-            </field>
-        </field>
-    </record>
 
 </odoo>

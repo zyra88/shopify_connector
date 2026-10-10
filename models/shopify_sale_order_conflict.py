@@ -43,22 +43,22 @@ class ShopifySaleOrderConflict(models.Model):
     imported_sale_order_id = fields.Many2one(
         'sale.order', string='Imported Sale Order', required=True, ondelete='cascade')
 
-    manual_order_name = fields.Char(related='manual_sale_order_id.name')
-    imported_order_name = fields.Char(related='imported_sale_order_id.name')
-    manual_partner_id = fields.Many2one(related='manual_sale_order_id.partner_id')
-    imported_partner_id = fields.Many2one(related='imported_sale_order_id.partner_id')
-    manual_state = fields.Selection(related='manual_sale_order_id.state')
-    imported_state = fields.Selection(related='imported_sale_order_id.state')
-    manual_amount_total = fields.Monetary(related='manual_sale_order_id.amount_total')
-    imported_amount_total = fields.Monetary(related='imported_sale_order_id.amount_total')
+    manual_order_name = fields.Char(related='manual_sale_order_id.name', string='Manual Order Reference')
+    imported_order_name = fields.Char(related='imported_sale_order_id.name', string='Imported Order Reference')
+    manual_partner_id = fields.Many2one(related='manual_sale_order_id.partner_id', string='Manual Customer')
+    imported_partner_id = fields.Many2one(related='imported_sale_order_id.partner_id', string='Imported Customer')
+    manual_state = fields.Selection(related='manual_sale_order_id.state', string='Manual Status')
+    imported_state = fields.Selection(related='imported_sale_order_id.state', string='Imported Status')
+    manual_amount_total = fields.Monetary(related='manual_sale_order_id.amount_total', string='Manual Total')
+    imported_amount_total = fields.Monetary(related='imported_sale_order_id.amount_total', string='Imported Total')
     currency_id = fields.Many2one(related='manual_sale_order_id.currency_id')
 
     studio_order_id_display = fields.Char(
         string='Manual Order ID', compute='_compute_studio_order_ids')
     manual_studio_order_id = fields.Char(
-        string='Order ID', compute='_compute_studio_order_ids')
+        string='Manual Order ID (Studio)', compute='_compute_studio_order_ids')
     imported_studio_order_id = fields.Char(
-        string='Order ID', compute='_compute_studio_order_ids')
+        string='Imported Order ID (Studio)', compute='_compute_studio_order_ids')
     shopify_mirror_name = fields.Char(
         related='shopify_mirror_id.shopify_order_name', string='Shopify Sync Order')
     show_fill_studio_order_id_button = fields.Boolean(

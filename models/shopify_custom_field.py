@@ -71,16 +71,16 @@ class ShopifyCustomField(models.Model):
     shopify_value = fields.Selection(SHOPIFY_VALUES, string='Shopify information',
                                     compute='_compute_inputs', inverse='_inverse_inputs')
     legacy_source = fields.Boolean(compute='_compute_inputs')
-    text_value = fields.Text(string='Value', compute='_compute_inputs', inverse='_inverse_inputs')
-    boolean_value = fields.Boolean(string='Value', compute='_compute_inputs', inverse='_inverse_inputs')
-    integer_value = fields.Integer(string='Value', compute='_compute_inputs', inverse='_inverse_inputs')
-    number_value = fields.Float(string='Value', digits=(16, 6), compute='_compute_inputs', inverse='_inverse_inputs')
-    date_value = fields.Date(string='Value', compute='_compute_inputs', inverse='_inverse_inputs')
-    datetime_value = fields.Datetime(string='Value', compute='_compute_inputs', inverse='_inverse_inputs')
-    choice_id = fields.Many2one('ir.model.fields.selection', string='Value',
+    text_value = fields.Text(string='Value (Text)', compute='_compute_inputs', inverse='_inverse_inputs')
+    boolean_value = fields.Boolean(string='Value (Yes/No)', compute='_compute_inputs', inverse='_inverse_inputs')
+    integer_value = fields.Integer(string='Value (Whole Number)', compute='_compute_inputs', inverse='_inverse_inputs')
+    number_value = fields.Float(string='Value (Number)', digits=(16, 6), compute='_compute_inputs', inverse='_inverse_inputs')
+    date_value = fields.Date(string='Value (Date)', compute='_compute_inputs', inverse='_inverse_inputs')
+    datetime_value = fields.Datetime(string='Value (Date and Time)', compute='_compute_inputs', inverse='_inverse_inputs')
+    choice_id = fields.Many2one('ir.model.fields.selection', string='Value (Choice)',
                                domain="[('field_id', '=', field_id)]",
                                compute='_compute_inputs', inverse='_inverse_inputs')
-    record_value = fields.Many2oneReference(string='Value', model_field='relation_model',
+    record_value = fields.Many2oneReference(string='Value (Record)', model_field='relation_model',
                                           compute='_compute_inputs', inverse='_inverse_inputs')
     value_summary = fields.Char(string='Configured value', compute='_compute_inputs')
 

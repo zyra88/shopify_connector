@@ -188,15 +188,15 @@
                                         <div class="text-muted" invisible="source != 'payload' or not legacy_source">
                                             Your previous Shopify setting is saved. Choose an option above to replace it.
                                         </div>
-                                        <field name="text_value" invisible="not field_id or source != 'fixed' or field_type not in ['char', 'text', 'html']" placeholder="Enter the value to use on every order"/>
-                                        <field name="boolean_value" invisible="not field_id or source != 'fixed' or field_type != 'boolean'"/>
-                                        <field name="integer_value" invisible="not field_id or source != 'fixed' or field_type != 'integer'"/>
-                                        <field name="number_value" invisible="not field_id or source != 'fixed' or field_type not in ['float', 'monetary']"/>
-                                        <field name="date_value" invisible="not field_id or source != 'fixed' or field_type != 'date'"/>
-                                        <field name="datetime_value" invisible="not field_id or source != 'fixed' or field_type != 'datetime'"/>
-                                        <field name="choice_id" invisible="not field_id or source != 'fixed' or field_type != 'selection'"
+                                        <field name="text_value" string="Value" invisible="not field_id or source != 'fixed' or field_type not in ['char', 'text', 'html']" placeholder="Enter the value to use on every order"/>
+                                        <field name="boolean_value" string="Value" invisible="not field_id or source != 'fixed' or field_type != 'boolean'"/>
+                                        <field name="integer_value" string="Value" invisible="not field_id or source != 'fixed' or field_type != 'integer'"/>
+                                        <field name="number_value" string="Value" invisible="not field_id or source != 'fixed' or field_type not in ['float', 'monetary']"/>
+                                        <field name="date_value" string="Value" invisible="not field_id or source != 'fixed' or field_type != 'date'"/>
+                                        <field name="datetime_value" string="Value" invisible="not field_id or source != 'fixed' or field_type != 'datetime'"/>
+                                        <field name="choice_id" string="Value" invisible="not field_id or source != 'fixed' or field_type != 'selection'"
                                                options="{'no_create': True, 'no_open': True}"/>
-                                        <field name="record_value" invisible="not field_id or source != 'fixed' or field_type != 'many2one'"
+                                        <field name="record_value" string="Value" invisible="not field_id or source != 'fixed' or field_type != 'many2one'"
                                                options="{'no_create': True, 'no_open': True}"/>
                                         <div class="text-muted" invisible="not field_id or source != 'payload'">
                                             Choose information from the Shopify order. If it is missing, the existing value is kept.

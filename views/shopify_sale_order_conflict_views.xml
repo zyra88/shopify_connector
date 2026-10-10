@@ -94,15 +94,15 @@
                         <group string="Manual (your data)">
                             <field name="manual_sale_order_id" readonly="1"/>
                             <field name="manual_studio_order_id" string="Order ID (Studio)"/>
-                            <field name="manual_state"/>
-                            <field name="manual_amount_total"/>
+                            <field name="manual_state" string="Status"/>
+                            <field name="manual_amount_total" string="Total"/>
                         </group>
                         <group string="Imported (connector)">
                             <field name="imported_sale_order_id" readonly="1"/>
                             <field name="imported_studio_order_id" string="Order ID (Studio)"/>
                             <field name="shopify_order_id" string="Shopify order id"/>
-                            <field name="imported_state"/>
-                            <field name="imported_amount_total"/>
+                            <field name="imported_state" string="Status"/>
+                            <field name="imported_amount_total" string="Total"/>
                         </group>
                     </group>
                 </sheet>
