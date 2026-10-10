@@ -31,10 +31,10 @@
                 </group>
             </group>
 
-            <xpath expr="//field[@name='order_line']/list/field[@name='name']" position="after">
-                <field name="shopify_line_type" optional="hide" readonly="1"
+            <xpath expr="//field[@name='order_line']/form//field[@name='name']" position="after">
+                <field name="shopify_line_type" readonly="1"
                        groups="shopify_connector.group_shopify_user"/>
-                <field name="shopify_sku" optional="hide" readonly="1"
+                <field name="shopify_sku" readonly="1"
                        groups="shopify_connector.group_shopify_user"/>
             </xpath>
         </field>

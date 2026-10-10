@@ -54,11 +54,11 @@
                 <field name="shopify_customer_id" string="Shopify Customer ID"
                        groups="shopify_connector.group_shopify_user"/>
             </field>
-            <filter name="type_person" position="after">
-                <separator/>
+            <filter name="inactive" position="before">
                 <filter name="shopify_customers" string="From Shopify"
                         domain="[('is_shopify_customer', '=', True)]"
                         groups="shopify_connector.group_shopify_user"/>
+                <separator/>
             </filter>
         </field>
     </record>

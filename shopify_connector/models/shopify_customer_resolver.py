@@ -181,7 +181,7 @@ class ShopifyCustomerResolver(models.AbstractModel):
             'name': name,
             'email': email or False,
             'phone': phone or False,
-            'company_type': 'company' if (billing.get('company') or shipping.get('company')) else 'person',
+            'is_company': bool(billing.get('company') or shipping.get('company')),
             'customer_rank': 1,
             'company_id': False,
             'shopify_customer_id': customer.get('id') and str(customer['id']) or False,

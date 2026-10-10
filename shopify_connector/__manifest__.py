@@ -1,6 +1,6 @@
 {
     'name': 'Shopify Connector',
-    'version': '19.0.1.0.25',
+    'version': '20.0.1.0.25',
     'category': 'Sales/Sales',
     'author': 'M.SHAHIDH',
     'summary': 'Order-first Shopify integration: import orders, resolve customers and products, create sale orders',
@@ -8,7 +8,7 @@
 Shopify Connector
 =================
 
-Order-first Shopify integration for Odoo 19.
+Order-first Shopify integration for Odoo 20.
 
 The connector treats customer synchronisation as a *step of* order
 synchronisation: for every Shopify order the customer is resolved (or created)
@@ -41,7 +41,7 @@ Features
     },
     'data': [
         'security/shopify_security.xml',
-        'security/ir.model.access.csv',
+        'security/ir.access.csv',
         'data/ir_cron_data.xml',
         'wizards/shopify_import_orders_wizard_views.xml',
         'wizards/shopify_fetch_catalog_wizard_views.xml',

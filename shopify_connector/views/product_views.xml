@@ -41,19 +41,6 @@
         </field>
     </record>
 
-    <record id="product_variant_easy_edit_view_shopify" model="ir.ui.view">
-        <field name="name">product.product.variant.easy.edit.shopify</field>
-        <field name="model">product.product</field>
-        <field name="inherit_id" ref="product.product_variant_easy_edit_view"/>
-        <field name="arch" type="xml">
-            <xpath expr="//group[@name='codes']" position="inside">
-                <field name="shopify_variant_id" groups="shopify_connector.group_shopify_user"/>
-                <field name="shopify_product_id" readonly="1"
-                       groups="shopify_connector.group_shopify_user"/>
-            </xpath>
-        </field>
-    </record>
-
     <record id="product_template_tree_view_shopify" model="ir.ui.view">
         <field name="name">product.template.list.shopify</field>
         <field name="model">product.template</field>
